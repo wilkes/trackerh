@@ -6,15 +6,19 @@ import Text.XML.HaXml
 
 main = do args <- getArgs
           case args of
-            ["token", username, password] -> token username password
-            ["projects", token] -> projects token
-            ["project", token, projectID] -> project token projectID
+            ["token", username, password]        -> token username password
+            ["projects", token]                  -> projects token
+            ["project", token, projectID]        -> project token projectID
+            ["stories", token, projectID]        -> stories token projectID
+            ["story", token, projectID, storyID] -> story token projectID storyID
             _ -> printUsage
 
 printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh token username password\n\
                       \trackerh projects token\n\
                       \trackerh project token projectID\n\
+                      \trackerh stories token projectID\n\
+                      \trackerh story token projectID storyID\n\
                       \\n"
 
 token :: String -> String -> IO ()
@@ -33,6 +37,15 @@ projects token = tokenCall url token putStrLn
 project :: String -> String -> IO ()
 project token projectID = tokenCall url token putStrLn
     where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID
+
+stories :: String -> String -> IO ()
+stories token projectID = tokenCall url token putStrLn
+    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID ++ "/stories"
+
+story :: String -> String -> String -> IO ()
+story token projectID storyID = tokenCall url token putStrLn
+    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID ++ "/stories/" ++ storyID
+  
 
 tokenCall :: String -> String -> (String -> IO ()) -> IO ()
 tokenCall url token callback = callRemote url opts callback
