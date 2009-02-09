@@ -1,0 +1,19 @@
+* API Support
+  http://www.pivotaltracker.com/help/api
+*** Retrieve User Token
+    trackerh token user pwd
+    GET https://www.pivotaltracker.com/services/tokens/active
+    Uses basic authenticaion
+*** Get Projects
+***** Single project
+***** All my projects
+*** Get Stories
+***** Single story
+***** All stories in a project
+***** Stories by filter
+***** With pagination
+*** Add Story
+*** Update Story
+*** Add Comment
+*** Delete Story
+*** Deliver All Finished Stories
