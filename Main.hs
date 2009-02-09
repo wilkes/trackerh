@@ -8,28 +8,35 @@ main = do args <- getArgs
           case args of
             ["token", username, password] -> token username password
             ["projects", token] -> projects token
+            ["project", token, projectID] -> project token projectID
             _ -> printUsage
 
 printUsage = putStrLn "Usage: trackerh command [args]\n\
-                      \trackerh token username password\
-                      \trackerh projects token\
+                      \trackerh token username password\n\
+                      \trackerh projects token\n\
+                      \trackerh project token projectID\n\
                       \\n"
-
-parseResponse = xmlParse "pivotal tracker response"
 
 token :: String -> String -> IO ()
 token username password = callRemote url opts callback
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
-          callback = (putStrLn . getToken . parseResponse)
+          callback = (putStrLn . getToken . (xmlParse "pivotal tracker response"))
 
 getToken :: Document -> String
 getToken (Document _ _ e _) = verbatim $ tag "token" /> tag "guid" /> txt $ CElem e
 
 projects :: String -> IO ()
-projects token = callRemote url opts putStrLn
+projects token = tokenCall url token putStrLn
     where url = "https://www.pivotaltracker.com/services/v2/projects"
-          opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token, "Content-type: application/xml"]]
+
+project :: String -> String -> IO ()
+project token projectID = tokenCall url token putStrLn
+    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID
+
+tokenCall :: String -> String -> (String -> IO ()) -> IO ()
+tokenCall url token callback = callRemote url opts callback
+    where opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token, "Content-type: application/xml"]]
 
 callRemote :: String -> [Curl.CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
