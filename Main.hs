@@ -26,31 +26,28 @@ serviceURL = "https://www.pivotaltracker.com/services/v2/"
 projectURL = serviceURL ++ "projects/" 
 
 token :: String -> String -> IO ()
-token username password = callRemote url opts callback
+token username password = callRemote url opts (putStrLn . getToken . parseResponse)
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
-          callback = putStrLn . getToken . parseResponse
 
 getToken :: Content -> String
 getToken e = verbatim $ tag "token" /> tag "guid" /> txt $ e
 
 projects :: String -> IO ()
-projects token = tokenCall url token putStrLn
+projects token = tokenCall url token (putRecord xml2Projects)
     where url = serviceURL ++ "projects"
 
 project :: String -> String -> IO ()
-project token projectID = tokenCall url token putStrLn
+project token projectID = tokenCall url token (putRecord xml2Project)
     where url = projectURL ++ projectID
 
 stories :: String -> String -> IO ()
-stories token projectID = tokenCall url token callback
+stories token projectID = tokenCall url token (putRecord xml2Stories)
     where url = projectURL ++ projectID ++ "/stories"
-          callback = putStrLn . show . xml2Stories . parseResponse
 
 story :: String -> String -> String -> IO ()
-story token projectID storyID = tokenCall url token callback
+story token projectID storyID = tokenCall url token (putRecord xml2Story)
     where url = projectURL ++ projectID ++ "/stories/" ++ storyID
-          callback = putStrLn . show . xml2Story . parseResponse
 
 tokenCall :: String -> String -> (String -> IO ()) -> IO ()
 tokenCall url token callback = callRemote url opts callback
@@ -62,6 +59,9 @@ callRemote url opts callback =
        case code of
          Curl.CurlOK -> callback res
          _ -> fail $ show code
+
+putRecord :: (Show a) => (Content -> a) -> String -> IO ()
+putRecord transformer = putStrLn . show . transformer . parseResponse
 
 parseResponse :: String -> Content
 parseResponse = content . (xmlParse "response")
@@ -83,3 +83,15 @@ xml2Story e =
             stCreatedAt    = st "craeted_at",
             stLabels       = st "labels" }
     where st k = verbatim $ tag "story" /> tag k /> txt $ e
+
+xml2Projects :: Content -> [Project]
+xml2Projects e = map xml2Project (tag "projects" /> tag "project" $ e)
+
+xml2Project :: Content -> Project
+xml2Project e = 
+    Project { prjID = st "id",
+              prjName = st "name",
+              prjIterationLength = st "iteration_length",
+              prjWeekStartDay = st "week_start_day",
+              prjPointScale = st "point_scale" }
+    where st k = verbatim $ tag "project" /> tag k /> txt $ e
