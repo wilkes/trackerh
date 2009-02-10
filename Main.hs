@@ -21,6 +21,9 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh story token projectID storyID\n\
                       \\n"
 
+serviceURL = "https://www.pivotaltracker.com/services/v2/"
+projectURL = serviceURL ++ "projects/" 
+
 token :: String -> String -> IO ()
 token username password = callRemote url opts callback
     where url = "https://www.pivotaltracker.com/services/tokens/active"
@@ -32,20 +35,19 @@ getToken (Document _ _ e _) = verbatim $ tag "token" /> tag "guid" /> txt $ CEle
 
 projects :: String -> IO ()
 projects token = tokenCall url token putStrLn
-    where url = "https://www.pivotaltracker.com/services/v2/projects"
+    where url = serviceURL ++ "projects"
 
 project :: String -> String -> IO ()
 project token projectID = tokenCall url token putStrLn
-    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID
+    where url = projectURL ++ projectID
 
 stories :: String -> String -> IO ()
 stories token projectID = tokenCall url token putStrLn
-    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID ++ "/stories"
+    where url = projectURL ++ projectID ++ "/stories"
 
 story :: String -> String -> String -> IO ()
 story token projectID storyID = tokenCall url token putStrLn
-    where url = "https://www.pivotaltracker.com/services/v2/projects/" ++ projectID ++ "/stories/" ++ storyID
-  
+    where url = projectURL ++ projectID ++ "/stories/" ++ storyID
 
 tokenCall :: String -> String -> (String -> IO ()) -> IO ()
 tokenCall url token callback = callRemote url opts callback
