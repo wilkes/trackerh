@@ -3,6 +3,7 @@ module Main where
 import System.Environment
 import qualified Network.Curl as Curl
 import Text.XML.HaXml
+import TrackerTypes
 
 main = do args <- getArgs
           case args of
@@ -28,10 +29,10 @@ token :: String -> String -> IO ()
 token username password = callRemote url opts callback
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
-          callback = (putStrLn . getToken . (xmlParse "pivotal tracker response"))
+          callback = putStrLn . getToken . parseResponse
 
-getToken :: Document -> String
-getToken (Document _ _ e _) = verbatim $ tag "token" /> tag "guid" /> txt $ CElem e
+getToken :: Content -> String
+getToken e = verbatim $ tag "token" /> tag "guid" /> txt $ e
 
 projects :: String -> IO ()
 projects token = tokenCall url token putStrLn
@@ -42,12 +43,14 @@ project token projectID = tokenCall url token putStrLn
     where url = projectURL ++ projectID
 
 stories :: String -> String -> IO ()
-stories token projectID = tokenCall url token putStrLn
+stories token projectID = tokenCall url token callback
     where url = projectURL ++ projectID ++ "/stories"
+          callback = putStrLn . show . xml2Stories . parseResponse
 
 story :: String -> String -> String -> IO ()
-story token projectID storyID = tokenCall url token putStrLn
+story token projectID storyID = tokenCall url token callback
     where url = projectURL ++ projectID ++ "/stories/" ++ storyID
+          callback = putStrLn . show . xml2Story . parseResponse
 
 tokenCall :: String -> String -> (String -> IO ()) -> IO ()
 tokenCall url token callback = callRemote url opts callback
@@ -59,3 +62,24 @@ callRemote url opts callback =
        case code of
          Curl.CurlOK -> callback res
          _ -> fail $ show code
+
+parseResponse :: String -> Content
+parseResponse = content . (xmlParse "response")
+    where content (Document _ _ e _) = CElem e
+
+xml2Stories :: Content -> [Story]
+xml2Stories e = map xml2Story (tag "stories" /> tag "story" $ e)
+
+xml2Story :: Content -> Story
+xml2Story e = 
+    Story { stID           = st "id",
+            stType         = st "story_type",
+            stURL          = st "url",
+            stEstimate     = st "estimate",
+            stCurrentState = st "current_state",
+            stDescription  = st "description",
+            stName         = st "name",
+            stRequestedBy  = st "requested_by",
+            stCreatedAt    = st "craeted_at",
+            stLabels       = st "labels" }
+    where st k = verbatim $ tag "story" /> tag k /> txt $ e
