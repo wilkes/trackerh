@@ -2,6 +2,8 @@ module Main where
 
 import System.Environment
 import qualified Network.Curl as Curl
+import Network.URI
+import Data.List
 import Text.XML.HaXml
 import TrackerTypes
 
@@ -9,9 +11,10 @@ main = do args <- getArgs
           case args of
             ["token", username, password]        -> token username password
             ["projects", token]                  -> projects token
-            ["project", token, projectID]        -> project token projectID
-            ["stories", token, projectID]        -> stories token projectID
-            ["story", token, projectID, storyID] -> story token projectID storyID
+            ["project", token, pid]              -> project token pid
+            ["stories", token, pid]              -> stories token pid
+            ["story", token, pid, storyID]       -> story token pid storyID
+            ("search" : token : pid : rest) -> search token pid (intercalate " " rest)
             _ -> printUsage
 
 printUsage = putStrLn "Usage: trackerh command [args]\n\
@@ -29,9 +32,7 @@ token :: String -> String -> IO ()
 token username password = callRemote url opts (putStrLn . getToken . parseResponse)
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
-
-getToken :: Content -> String
-getToken e = verbatim $ tag "token" /> tag "guid" /> txt $ e
+          getToken e = verbatim $ tag "token" /> tag "guid" /> txt $ e
 
 projects :: String -> IO ()
 projects token = tokenCall url token (putRecord xml2Projects)
@@ -49,9 +50,15 @@ story :: String -> String -> String -> IO ()
 story token projectID storyID = tokenCall url token (putRecord xml2Story)
     where url = projectURL ++ projectID ++ "/stories/" ++ storyID
 
+search :: String -> String -> String -> IO ()
+search token projectID filter = tokenCall url token (putRecord xml2Stories)
+    where url = projectURL ++ projectID ++ "/stories?filter=" ++ query
+          query = escapeURIString isUnescapedInURI filter
+
 tokenCall :: String -> String -> (String -> IO ()) -> IO ()
 tokenCall url token callback = callRemote url opts callback
-    where opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token, "Content-type: application/xml"]]
+    where opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token, 
+                                        "Content-type: application/xml"]]
 
 callRemote :: String -> [Curl.CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
