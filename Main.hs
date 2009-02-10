@@ -55,10 +55,12 @@ tokenCall url token callback = callRemote url opts callback
 
 callRemote :: String -> [Curl.CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
-    do (code, res) <- Curl.curlGetString url opts
-       case code of
-         Curl.CurlOK -> callback res
-         _ -> fail $ show code
+    do response <- getResponse
+       case (Curl.respCurlCode response) of
+         Curl.CurlOK -> callback $ Curl.respBody response
+         _ -> fail $ Curl.respStatusLine response
+    where getResponse :: IO (Curl.CurlResponse_ [(String, String)] String)
+          getResponse = Curl.curlGetResponse_ url opts
 
 putRecord :: (Show a) => (Content -> a) -> String -> IO ()
 putRecord transformer = putStrLn . show . transformer . parseResponse
