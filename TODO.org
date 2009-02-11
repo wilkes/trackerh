@@ -17,3 +17,25 @@
 *** Add Comment
 *** Delete Story
 *** Deliver All Finished Stories
+
+* Workflow
+*** Setup
+***** get token and write to .trackerh file
+***** list projects Project Name, ID
+***** set working project, write to .trackerh
+***** set up user name
+*** Informational
+***** How do I find a particular story?
+      trackerh search foo type:feature
+      trackerh search --help for options
+***** How can I find all stories that I own but haven't yet started?
+      trackerh mine unstarted
+      trackerh mine started
+      trackerh mine requested
+***** How can I find all stories I've requested that are delivered and ready for me to verify?
+      trackerh mine verify
+*** Current Story
+***** Checkout a story that will be tied to a series of commits in github
+      This will create a working branch with that story number as the
+      branch name.
+      
