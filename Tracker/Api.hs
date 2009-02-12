@@ -7,7 +7,8 @@ import Tracker.Types
 import Tracker.Xml
 
 serviceURL = "https://www.pivotaltracker.com/services/v2/"
-projectURL = serviceURL ++ "projects/" 
+projectURL = serviceURL ++ "projects"
+storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
 token :: String -> String -> IO ()
 token username password = callRemote url opts (putStrLn . getToken)
@@ -15,37 +16,39 @@ token username password = callRemote url opts (putStrLn . getToken)
           opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
 
 projects :: String -> IO ()
-projects token = tokenCall url token (putProjects . toRecords)
-    where url = serviceURL ++ "projects"
+projects token = tokenCall token (putProjects . toRecords) projectURL
 
 project :: String -> String -> IO ()
-project token projectID = tokenCall url token (putProject . toRecord)
-    where url = projectURL ++ projectID
+project token projectID = tokenCall token (putProject . toRecord) url
+    where url = projectURL ++ "/" ++ projectID
 
 stories :: String -> String -> IO ()
-stories token projectID = tokenCall url token (putStories . toRecords)
-    where url = projectURL ++ projectID ++ "/stories"
+stories token projectID = tokenCall token (putStories . toRecords) $ storiesURL projectID
 
 story :: String -> String -> String -> IO ()
-story token projectID storyID = tokenCall url token (putStory . toRecord)
-    where url = projectURL ++ projectID ++ "/stories/" ++ storyID
+story token projectID storyID = tokenCall token (putStory . toRecord) url 
+    where url = (storiesURL projectID) ++ "/" ++ storyID
 
 search :: String -> String -> String -> IO ()
-search token projectID filter = tokenCall url token (putStories . toRecords)
-    where url = projectURL ++ projectID ++ "/stories?filter=" ++ query
+search token projectID filter = tokenCall token (putStories . toRecords) url
+    where url = (storiesURL projectID) ++ "?filter=" ++ query
           query = escapeURIString isUnescapedInURI filter
 
-tokenCall :: String -> String -> (String -> IO ()) -> IO ()
-tokenCall url token callback = callRemote url opts callback
+tokenCall :: String -> (String -> IO ()) -> String -> IO ()
+tokenCall token callback url = callRemote url opts callback
     where opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token,
                                         "Content-type: application/xml"]]
 
 callRemote :: String -> [Curl.CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
-    Curl.curlGetString url opts >>= \(code, res) ->
-        case code of
-          Curl.CurlOK -> callback res
-          _ -> fail $ show code
+    getResponse >>= \response ->
+        case (Curl.respCurlCode response) of
+          Curl.CurlOK -> callback $ Curl.respBody response
+          _ -> fail $ msg response 
+    where getResponse :: IO (Curl.CurlResponse_ [(String, String)] String)
+          getResponse = Curl.curlGetResponse_ url opts
+          msg r = url ++ "\n" ++ 
+                  (show $ Curl.respStatus r) ++ Curl.respStatusLine r
 
 putProjects :: [Project] -> IO ()
 putProjects = mapM_ (\s -> putStrLn "" >> putProject s)
