@@ -4,7 +4,7 @@ import System.Environment
 import Tracker.Api
 import Data.List
 
-main = do args <- getArgs
+main = getArgs >>= \args ->
           case args of
             ["token", username, password]        -> token username password
             ["projects", token]                  -> projects token
