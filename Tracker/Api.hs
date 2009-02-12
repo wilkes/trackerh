@@ -1,6 +1,6 @@
 module Tracker.Api where
 
-import qualified Network.Curl as Curl
+import Network.Curl
 import Network.URI
 
 import Tracker.Types
@@ -13,7 +13,7 @@ storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 token :: String -> String -> IO ()
 token username password = callRemote url opts (putStrLn . getToken)
     where url = "https://www.pivotaltracker.com/services/tokens/active"
-          opts = [Curl.CurlUserPwd $ username ++ ":" ++ password]
+          opts = [CurlUserPwd $ username ++ ":" ++ password]
 
 projects :: String -> IO ()
 projects token = tokenCall token (putProjects . toRecords) projectURL
@@ -36,19 +36,19 @@ search token projectID filter = tokenCall token (putStories . toRecords) url
 
 tokenCall :: String -> (String -> IO ()) -> String -> IO ()
 tokenCall token callback url = callRemote url opts callback
-    where opts = [Curl.CurlHttpHeaders ["X-TrackerToken: " ++ token,
+    where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ token,
                                         "Content-type: application/xml"]]
 
-callRemote :: String -> [Curl.CurlOption] -> (String -> IO ()) -> IO () 
+callRemote :: String -> [CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
     getResponse >>= \response ->
-        case (Curl.respCurlCode response) of
-          Curl.CurlOK -> callback $ Curl.respBody response
+        case (respCurlCode response) of
+          CurlOK -> callback $ respBody response
           _ -> fail $ msg response 
-    where getResponse :: IO (Curl.CurlResponse_ [(String, String)] String)
-          getResponse = Curl.curlGetResponse_ url opts
+    where getResponse :: IO (CurlResponse_ [(String, String)] String)
+          getResponse = curlGetResponse_ url opts
           msg r = url ++ "\n" ++ 
-                  (show $ Curl.respStatus r) ++ Curl.respStatusLine r
+                  (show $ respStatus r) ++ respStatusLine r
 
 putProjects :: [Project] -> IO ()
 putProjects = mapM_ (\s -> putStrLn "" >> putProject s)
