@@ -6,7 +6,7 @@ data Project =
               prjIterationLength :: String,
               prjWeekStartDay :: String,
               prjPointScale :: String }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show)
 
 data Story = 
     Story { stID :: String,
@@ -19,4 +19,4 @@ data Story =
             stRequestedBy :: String,
             stCreatedAt :: String,
             stLabels :: String }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show)
