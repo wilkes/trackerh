@@ -37,7 +37,7 @@ search token projectID filter = tokenCall token (putStories . toRecords) url
 tokenCall :: String -> (String -> IO ()) -> String -> IO ()
 tokenCall token callback url = callRemote url opts callback
     where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ token,
-                                        "Content-type: application/xml"]]
+                                   "Content-type: application/xml"]]
 
 callRemote :: String -> [CurlOption] -> (String -> IO ()) -> IO () 
 callRemote url opts callback = 
@@ -50,32 +50,35 @@ callRemote url opts callback =
           msg r = url ++ "\n" ++ 
                   (show $ respStatus r) ++ respStatusLine r
 
+putItems :: (a -> IO ()) -> [a] -> IO ()
+putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
+
+putItem :: [(a -> String, String)] -> a -> IO ()
+putItem attrMap item = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr item)) attrMap
+
 putProjects :: [Project] -> IO ()
-putProjects = mapM_ (\s -> putStrLn "" >> putProject s)
+putProjects = putItems putProject
 
 putProject :: Project -> IO ()
-putProject project = mapM_ display attrMap
-      where display (attr, label) = putStrLn $ label ++ ": " ++ (attr project)
-            attrMap =[ (prjName, "Name"),
-                       (prjID, "ID"),
-                       (prjIterationLength, "Iteration Length"),
-                       (prjWeekStartDay, "Start Day"),
-                       (prjPointScale, "Point Scale")]
+putProject = putItem [(prjName, "Name"),
+                      (prjID, "ID"),
+                      (prjIterationLength, "Iteration Length"),
+                      (prjWeekStartDay, "Start Day"),
+                      (prjPointScale, "Point Scale")]
 
 putStories :: [Story] -> IO ()
-putStories = mapM_ (\s -> putStrLn "" >> putStory s)
+putStories = putItems putStory
 
 putStory :: Story -> IO ()
-putStory story = mapM_ display attrMap
-      where display (attr, label) = putStrLn $ label ++ ": " ++ (attr story)
-            attrMap = [(stName         ,"Name"),
-                       (stID           ,"ID"),
-                       (stType         ,"Type"),
-                       (stURL          ,"URL"),
-                       (stEstimate     ,"Estimate"),
-                       (stCurrentState ,"Status"),
-                       (stRequestedBy  ,"Requestor"),
-                       (stCreatedAt    ,"Created"),
-                       (stLabels       ,"Labels"),
-                       (stDescription  ,"Description")]
+putStory = putItem [(stName         ,"Name"),
+                    (stID           ,"ID"),
+                    (stType         ,"Type"),
+                    (stURL          ,"URL"),
+                    (stEstimate     ,"Estimate"),
+                    (stCurrentState ,"Status"),
+                    (stRequestedBy  ,"Requestor"),
+                    (stCreatedAt    ,"Created"),
+                    (stLabels       ,"Labels"),
+                    (stDescription  ,"Description")]
+      
 
