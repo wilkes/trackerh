@@ -1,7 +1,13 @@
 Name: trackerh
 Version: 0.0.1
 Build-type: Simple
-Build-Depends: curl, HaXml, network, base
+Build-Depends: base
+	       , curl
+	       , HaXml
+	       , network
+	       , ConfigFile
+	       , MissingH
+	       , directory
 
 Executable: trackerh
 Main-Is: Main.hs
