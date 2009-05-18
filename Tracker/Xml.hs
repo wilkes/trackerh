@@ -4,7 +4,7 @@ import Text.XML.HaXml
 import Tracker.Types
 
 parseResponse :: String -> Content
-parseResponse = content . (xmlParse "response")
+parseResponse res = content $ xmlParse "response" res
     where content (Document _ _ e _) = CElem e
 
 getToken :: String -> String
