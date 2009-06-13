@@ -1,9 +1,9 @@
 Name: trackerh
 Version: 0.0.1
 Build-type: Simple
-Build-Depends: base
+Build-Depends:   base
 	       , curl
-	       , HaXml
+	       , HaXml < 1.19
 	       , network
 	       , ConfigFile
 	       , MissingH
@@ -11,3 +11,4 @@ Build-Depends: base
 
 Executable: trackerh
 Main-Is: Main.hs
+GHC-Options: -O2 -Wall -Werror -fforce-recomp

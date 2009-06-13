@@ -6,8 +6,13 @@ import Network.URI
 import Tracker.Types
 import Tracker.Xml
 
+serviceURL :: String
 serviceURL = "https://www.pivotaltracker.com/services/v2/"
+
+projectURL :: String
 projectURL = serviceURL ++ "projects"
+
+storiesURL :: String -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
 token :: String -> String -> IO ()
@@ -16,27 +21,27 @@ token username password = callRemote url opts (putStrLn . getToken)
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
 projects :: String -> IO ()
-projects token = tokenCall token (putProjects . toRecords) projectURL
+projects t = tokenCall t (putProjects . toRecords) projectURL
 
 project :: String -> String -> IO ()
-project token projectID = tokenCall token (putProject . toRecord) url
+project t projectID = tokenCall t (putProject . toRecord) url
     where url = projectURL ++ "/" ++ projectID
 
 stories :: String -> String -> IO ()
-stories token projectID = tokenCall token (putStories . toRecords) $ storiesURL projectID
+stories t projectID = tokenCall t (putStories . toRecords) $ storiesURL projectID
 
 story :: String -> String -> String -> IO ()
-story token projectID storyID = tokenCall token (putStory . toRecord) url 
+story t projectID storyID = tokenCall t (putStory . toRecord) url 
     where url = (storiesURL projectID) ++ "/" ++ storyID
 
 search :: String -> String -> String -> IO ()
-search token projectID filter = tokenCall token (putStories . toRecords) url
-    where url = (storiesURL projectID) ++ "?filter=" ++ query
-          query = escapeURIString isUnescapedInURI filter
+search t projectID qstring = tokenCall t (putStories . toRecords) url
+    where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
+          escapedQuery = escapeURIString isUnescapedInURI qstring
 
 tokenCall :: String -> (String -> IO ()) -> String -> IO ()
-tokenCall token callback url = callRemote url opts callback
-    where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ token,
+tokenCall t callback url = callRemote url opts callback
+    where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ t,
                                    "Content-type: application/xml"]]
 
 callRemote :: String -> [CurlOption] -> (String -> IO ()) -> IO () 
@@ -54,7 +59,7 @@ putItems :: (a -> IO ()) -> [a] -> IO ()
 putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
 
 putItem :: [(a -> String, String)] -> a -> IO ()
-putItem attrMap item = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr item)) attrMap
+putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr i)) attrMap
 
 putProjects :: [Project] -> IO ()
 putProjects = putItems putProject

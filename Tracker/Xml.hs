@@ -17,7 +17,7 @@ item parent content key =
 
 class XmlRecord a where
     xml2Records :: CFilter -> String -> [a]
-    xml2Records path s = map contentToRecord $ path $ parseResponse s
+    xml2Records p s = map contentToRecord $ p $ parseResponse s
 
     toRecord :: String -> a
     toRecord = contentToRecord . parseResponse
