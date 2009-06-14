@@ -15,8 +15,8 @@ projectURL = serviceURL ++ "projects"
 storiesURL :: String -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
-token' :: String -> String -> IO String
-token' username password = getToken <$> callRemote url opts
+token :: String -> String -> IO String
+token username password = getToken <$> callRemote url opts
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 

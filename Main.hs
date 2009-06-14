@@ -7,6 +7,7 @@ import System.Console.GetOpt
 import System.Directory
 
 import Tracker.Api
+import Tracker.Types
 import Tracker.Config
 
 main :: IO ()
