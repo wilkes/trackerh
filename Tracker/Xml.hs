@@ -29,24 +29,26 @@ class XmlRecord a where
 instance XmlRecord Project where
     toRecords = xml2Records $ tag "projects" /> tag "project"
     contentToRecord c = 
-        Project { prjID = st "id",
-                  prjName = st "name",
-                  prjIterationLength = st "iteration_length",
-                  prjWeekStartDay = st "week_start_day",
-                  prjPointScale = st "point_scale" }
+        Project { prjID              = st "id"
+                , prjName            = st "name"
+                , prjIterationLength = st "iteration_length"
+                , prjWeekStartDay    = st "week_start_day"
+                , prjPointScale      = st "point_scale"
+                }
         where st = item "project" c
 
 instance XmlRecord Story where
     toRecords = xml2Records $ tag "stories" /> tag "story"
     contentToRecord c = 
-        Story { stID           = st "id",
-                stType         = st "story_type",
-                stURL          = st "url",
-                stEstimate     = st "estimate",
-                stCurrentState = st "current_state",
-                stDescription  = st "description",
-                stName         = st "name",
-                stRequestedBy  = st "requested_by",
-                stCreatedAt    = st "craeted_at",
-                stLabels       = st "labels" }
+        Story { stID           = st "id"
+              , stType         = st "story_type"
+              , stURL          = st "url"
+              , stEstimate     = st "estimate"
+              , stCurrentState = st "current_state"
+              , stDescription  = st "description"
+              , stName         = st "name"
+              , stRequestedBy  = st "requested_by"
+              , stCreatedAt    = st "craeted_at"
+              , stLabels       = st "labels"
+              }
         where st = item "story" c

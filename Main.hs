@@ -18,12 +18,12 @@ main =
       (_, _, errs) -> putStrLn (concat errs)
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
-runCmd _  "token"    [username, password] = token username password
-runCmd cp "projects" _        = projects (getToken cp)
-runCmd cp "project"  _        = project (getToken cp) (getProject cp)
-runCmd cp "stories"  _        = stories (getToken cp) (getProject cp)
-runCmd cp "story"   [storyID] = story (getToken cp) (getProject cp) storyID
-runCmd cp "search"  rest      = search (getToken cp) (getProject cp) (intercalate " " rest)
+runCmd _  "token"    [username, password] = putStrLn =<< token username password
+runCmd cp "project"  _        = putProject =<< project (getToken cp) (getProject cp)
+runCmd cp "projects" _        = putProjects =<< projects (getToken cp)
+runCmd cp "stories"  _        = putStories =<< stories (getToken cp) (getProject cp)
+runCmd cp "story"   [storyID] = putStory =<< story (getToken cp) (getProject cp) storyID
+runCmd cp "search"  rest      = putStories =<< search (getToken cp) (getProject cp) (intercalate " " rest)
 runCmd _ _ _ = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
@@ -43,4 +43,35 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh story storyID\n\
                       \\n"
 
+
+putItems :: (a -> IO ()) -> [a] -> IO ()
+putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
+
+putItem :: [(a -> String, String)] -> a -> IO ()
+putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr i)) attrMap
+
+putProjects :: [Project] -> IO ()
+putProjects = putItems putProject
+
+putProject :: Project -> IO ()
+putProject = putItem [(prjName, "Name"),
+                      (prjID, "ID"),
+                      (prjIterationLength, "Iteration Length"),
+                      (prjWeekStartDay, "Start Day"),
+                      (prjPointScale, "Point Scale")]
+
+putStories :: [Story] -> IO ()
+putStories = putItems putStory
+
+putStory :: Story -> IO ()
+putStory = putItem [(stName         ,"Name"),
+                    (stID           ,"ID"),
+                    (stType         ,"Type"),
+                    (stURL          ,"URL"),
+                    (stEstimate     ,"Estimate"),
+                    (stCurrentState ,"Status"),
+                    (stRequestedBy  ,"Requestor"),
+                    (stCreatedAt    ,"Created"),
+                    (stLabels       ,"Labels"),
+                    (stDescription  ,"Description")]
 

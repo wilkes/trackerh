@@ -1,5 +1,5 @@
 module Tracker.Api where
-
+import Control.Applicative((<$>))
 import Network.Curl
 import Network.URI
 
@@ -15,75 +15,43 @@ projectURL = serviceURL ++ "projects"
 storiesURL :: String -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
-token :: String -> String -> IO ()
-token username password = callRemote url opts (putStrLn . getToken)
+token' :: String -> String -> IO String
+token' username password = getToken <$> callRemote url opts
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
-projects :: String -> IO ()
-projects t = tokenCall t (putProjects . toRecords) projectURL
+projects :: String -> IO [Project]
+projects t = toRecords <$> tokenCall t projectURL
 
-project :: String -> String -> IO ()
-project t projectID = tokenCall t (putProject . toRecord) url
+project :: String -> String -> IO Project
+project t projectID = toRecord <$> tokenCall t url
     where url = projectURL ++ "/" ++ projectID
 
-stories :: String -> String -> IO ()
-stories t projectID = tokenCall t (putStories . toRecords) $ storiesURL projectID
+stories :: String -> String -> IO [Story]
+stories t projectID = toRecords <$> tokenCall t (storiesURL projectID)
 
-story :: String -> String -> String -> IO ()
-story t projectID storyID = tokenCall t (putStory . toRecord) url 
+story :: String -> String -> String -> IO Story
+story t projectID storyID = toRecord <$> tokenCall t url 
     where url = (storiesURL projectID) ++ "/" ++ storyID
 
-search :: String -> String -> String -> IO ()
-search t projectID qstring = tokenCall t (putStories . toRecords) url
+search :: String -> String -> String -> IO [Story]
+search t projectID qstring = toRecords <$> tokenCall t url
     where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
-tokenCall :: String -> (String -> IO ()) -> String -> IO ()
-tokenCall t callback url = callRemote url opts callback
+tokenCall :: String -> String -> IO String
+tokenCall t url = callRemote url opts
     where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ t,
                                    "Content-type: application/xml"]]
 
-callRemote :: String -> [CurlOption] -> (String -> IO ()) -> IO () 
-callRemote url opts callback = 
+callRemote :: String -> [CurlOption] -> IO String
+callRemote url opts = 
     getResponse >>= \response ->
         case (respCurlCode response) of
-          CurlOK -> callback $ respBody response
-          _ -> fail $ msg response 
+          CurlOK -> return $ respBody response
+          _      -> fail $ msg response 
     where getResponse :: IO (CurlResponse_ [(String, String)] String)
           getResponse = curlGetResponse_ url opts
           msg r = url ++ "\n" ++ 
                   (show $ respStatus r) ++ respStatusLine r
-
-putItems :: (a -> IO ()) -> [a] -> IO ()
-putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
-
-putItem :: [(a -> String, String)] -> a -> IO ()
-putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr i)) attrMap
-
-putProjects :: [Project] -> IO ()
-putProjects = putItems putProject
-
-putProject :: Project -> IO ()
-putProject = putItem [(prjName, "Name"),
-                      (prjID, "ID"),
-                      (prjIterationLength, "Iteration Length"),
-                      (prjWeekStartDay, "Start Day"),
-                      (prjPointScale, "Point Scale")]
-
-putStories :: [Story] -> IO ()
-putStories = putItems putStory
-
-putStory :: Story -> IO ()
-putStory = putItem [(stName         ,"Name"),
-                    (stID           ,"ID"),
-                    (stType         ,"Type"),
-                    (stURL          ,"URL"),
-                    (stEstimate     ,"Estimate"),
-                    (stCurrentState ,"Status"),
-                    (stRequestedBy  ,"Requestor"),
-                    (stCreatedAt    ,"Created"),
-                    (stLabels       ,"Labels"),
-                    (stDescription  ,"Description")]
-      
 
