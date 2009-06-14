@@ -19,13 +19,13 @@ main =
       (_, _, errs) -> putStrLn (concat errs)
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
-runCmd _  "token"    [username, password] = putStrLn =<< token username password
-runCmd cp "project"  _        = putProject =<< project (getToken cp) (getProject cp)
-runCmd cp "projects" _        = putProjects =<< projects (getToken cp)
-runCmd cp "stories"  _        = putStories =<< stories (getToken cp) (getProject cp)
-runCmd cp "story"   [storyID] = putStory =<< story (getToken cp) (getProject cp) storyID
-runCmd cp "search"  rest      = putStories =<< search (getToken cp) (getProject cp) (intercalate " " rest)
-runCmd _ _ _ = printUsage
+runCmd _  "token"    [username, password] = putStrLn    =<< token username password
+runCmd cp "project"  [projectID]          = putProject  =<< project (getToken cp) projectID
+runCmd cp "projects" _                    = putProjects =<< projects (getToken cp)
+runCmd cp "story"    [projectID, storyID] = putStory    =<< story (getToken cp) projectID storyID
+runCmd cp "stories"  [projectID]          = putStories  =<< stories (getToken cp) projectID
+runCmd cp "search"   (projectID:rest)     = putStories  =<< search (getToken cp) projectID (intercalate " " rest)
+runCmd _  _          _                    = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
 loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
