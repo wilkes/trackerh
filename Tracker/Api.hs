@@ -39,6 +39,17 @@ search t projectID qstring = toRecords <$> tokenCall t url
     where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
+addStory :: String -> String -> String -> IO Story
+addStory t projectID title = toRecord <$> tokenPost t (storiesURL projectID) postData
+    where postData = ["<story><name>" ++ title ++ "</name></story>"]
+
+tokenPost :: String -> String -> [String] -> IO String
+tokenPost t url ps = callRemote url opts
+    where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t,
+                                    "Content-type: application/xml"]
+                 , CurlPostFields ps
+                 , CurlPost True]
+
 tokenCall :: String -> String -> IO String
 tokenCall t url = callRemote url opts
     where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ t,

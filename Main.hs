@@ -20,11 +20,12 @@ main =
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
 runCmd _  "token"    [username, password] = putStrLn    =<< token username password
-runCmd cp "project"  [projectID]          = putProject  =<< project (getToken cp) projectID
+runCmd cp "project"  [projectID]          = putProject  =<< project  (getToken cp) projectID
 runCmd cp "projects" _                    = putProjects =<< projects (getToken cp)
-runCmd cp "story"    [projectID, storyID] = putStory    =<< story (getToken cp) projectID storyID
-runCmd cp "stories"  [projectID]          = putStories  =<< stories (getToken cp) projectID
-runCmd cp "search"   (projectID:rest)     = putStories  =<< search (getToken cp) projectID (intercalate " " rest)
+runCmd cp "story"    [projectID, storyID] = putStory    =<< story    (getToken cp) projectID storyID
+runCmd cp "stories"  [projectID]          = putStories  =<< stories  (getToken cp) projectID
+runCmd cp "search"   (projectID:rest)     = putStories  =<< search   (getToken cp) projectID (intercalate " " rest)
+runCmd cp "add"      (projectID:rest)     = putStory    =<< addStory (getToken cp) projectID (intercalate " " rest)
 runCmd _  _          _                    = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
@@ -39,9 +40,10 @@ printUsage :: IO ()
 printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh token username password\n\
                       \trackerh projects\n\
-                      \trackerh project\n\
-                      \trackerh stories\n\
-                      \trackerh story storyID\n\
+                      \trackerh project PROJECT_ID\n\
+                      \trackerh stories PROJECT_ID\n\
+                      \trackerh story STORY_ID\n\
+                      \trackerh add PROJECT_ID TITLE\n\
                       \\n"
 
 
