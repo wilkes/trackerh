@@ -1,10 +1,25 @@
-module Tracker.Api where
+module Tracker.Api
+    ( module Tracker.Types
+    , token
+    , project
+    , projects
+    , story
+    , stories
+    , search
+    , addStory
+    , iterationGroup
+    )
+    where
 import Control.Applicative((<$>))
 import Network.Curl
 import Network.URI
 
 import Tracker.Types
 import Tracker.Xml
+
+type Token     = String
+type ProjectID = String
+type StoryID   = String
 
 serviceURL :: String
 serviceURL = "https://www.pivotaltracker.com/services/v2/"
@@ -15,46 +30,46 @@ projectURL = serviceURL ++ "projects"
 storiesURL :: String -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
-token :: String -> String -> IO String
+token :: String -> String -> IO Token
 token username password = getToken <$> callRemote url opts
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
-projects :: String -> IO [Project]
+projects :: Token -> IO [Project]
 projects t = toRecords <$> tokenCall t projectURL
 
-project :: String -> String -> IO Project
+project :: Token -> ProjectID -> IO Project
 project t projectID = toRecord <$> tokenCall t url
     where url = projectURL ++ "/" ++ projectID
 
-stories :: String -> String -> IO [Story]
+stories :: Token -> ProjectID -> IO [Story]
 stories t projectID = toRecords <$> tokenCall t (storiesURL projectID)
 
-story :: String -> String -> String -> IO Story
+story :: Token -> ProjectID -> StoryID -> IO Story
 story t projectID storyID = toRecord <$> tokenCall t url 
     where url = (storiesURL projectID) ++ "/" ++ storyID
 
-search :: String -> String -> String -> IO [Story]
+search :: Token -> ProjectID -> String -> IO [Story]
 search t projectID qstring = toRecords <$> tokenCall t url
     where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
-addStory :: String -> String -> String -> IO Story
+addStory :: Token -> ProjectID -> String -> IO Story
 addStory t projectID title = toRecord <$> tokenPost t (storiesURL projectID) postData
     where postData = ["<story><name>" ++ title ++ "</name></story>"]
 
-iterationGroup :: String -> String -> String -> IO [Story]
+iterationGroup :: Token -> ProjectID -> String -> IO [Story]
 iterationGroup t projectID gname = parseIteration <$> tokenCall t url
     where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
 
-tokenPost :: String -> String -> [String] -> IO String
+tokenPost :: Token -> String -> [String] -> IO String
 tokenPost t url ps = callRemote url opts
     where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t,
                                     "Content-type: application/xml"]
                  , CurlPostFields ps
                  , CurlPost True]
 
-tokenCall :: String -> String -> IO String
+tokenCall :: Token -> String -> IO String
 tokenCall t url = callRemote url opts
     where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ t,
                                    "Content-type: application/xml"]]

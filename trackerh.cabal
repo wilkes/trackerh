@@ -1,14 +1,20 @@
 Name: trackerh
 Version: 0.0.1
+Cabal-Version: >= 1.6
 Build-type: Simple
-Build-Depends:   base
-	       , curl
-	       , HaXml < 1.19
-	       , network
-	       , ConfigFile
-	       , MissingH
-	       , directory
 
-Executable: trackerh
-Main-Is: Main.hs
-GHC-Options: -O2 -Wall -Werror -fforce-recomp
+Library
+  Build-Depends: base
+               , curl
+               , HaXml < 1.19
+               , network
+  Exposed-Modules: Tracker.Api
+
+Executable trackerh
+  Main-Is: Main.hs
+  Build-Depends: base
+               , ConfigFile
+               , MissingH
+               , directory
+  Other-Modules: Tracker.Api
+  GHC-Options: -O2 -Wall -Werror -fforce-recomp

@@ -5,18 +5,20 @@ import Data.List
 import System.Console.GetOpt.Utils
 import System.Console.GetOpt
 import System.Directory
+import Data.ConfigFile
+import Data.Either.Utils(forceEither)
 
 import Tracker.Api
-import Tracker.Types
-import Tracker.Config
 
 main :: IO ()
-main =
-    getArgs >>= \args ->
-    case getOpt RequireOrder options args of
+main = do 
+    args <- getArgs
+    case getOpt RequireOrder o args of
       (opts, (cmd:rest), []) -> do cp <- loadCP (lookup "c" opts)
                                    runCmd cp cmd rest
       (_, _, errs) -> putStrLn (concat errs)
+    where
+      o = [Option "c" ["config"] (ReqArg (stdRequired "c") "FILE") "Specify config"]
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
 runCmd _  "token"     [uid, pwd]     = putStrLn    =<< token uid pwd
@@ -36,8 +38,17 @@ loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
                    loadCP $ Just $ userDir ++ "/.trackerh"
 loadCP (Just fp) = loadConfig fp
 
-options :: [OptDescr StdOption]
-options = [Option "c" ["config"] (ReqArg (stdRequired "c") "FILE") "Specify config"]
+loadConfig :: FilePath -> IO ConfigParser
+loadConfig fp = readfile emptyCP fp >>= return . forceEither
+
+forceGet :: String -> ConfigParser -> String
+forceGet k cp = forceEither $ get cp "" k
+
+getToken :: ConfigParser -> String
+getToken    = forceGet "token"
+
+getProject :: ConfigParser -> String
+getProject  = forceGet "project"
 
 printUsage :: IO ()
 printUsage = putStrLn "Usage: trackerh command [args]\n\
@@ -53,7 +64,7 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \\n"
 
 putItems :: (a -> IO ()) -> [a] -> IO ()
-putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
+putItems putFunction i = mapM_ (\s -> putStrLn "" >> putFunction s) i
 
 putItem :: [(a -> String, String)] -> a -> IO ()
 putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr i)) attrMap
