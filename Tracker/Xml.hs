@@ -15,6 +15,26 @@ item :: String -> Content -> String -> String
 item parent content key = 
     verbatim $ tag parent /> tag key /> txt $ content
 
+parseIteration :: String -> [Story]
+parseIteration s = map storyXmlToRecord $ storyPath $ parseResponse s
+    where
+      storyPath = tag "iterations" /> tag "iteration" /> tag "stories" /> tag "story"
+
+storyXmlToRecord :: Content -> Story
+storyXmlToRecord c = 
+    Story { stID           = st "id"
+          , stType         = st "story_type"
+          , stURL          = st "url"
+          , stEstimate     = st "estimate"
+          , stCurrentState = st "current_state"
+          , stDescription  = st "description"
+          , stName         = st "name"
+          , stRequestedBy  = st "requested_by"
+          , stCreatedAt    = st "craeted_at"
+          , stLabels       = st "labels"
+          }
+    where st = item "story" c
+
 class XmlRecord a where
     xml2Records :: CFilter -> String -> [a]
     xml2Records p s = map contentToRecord $ p $ parseResponse s
@@ -39,16 +59,4 @@ instance XmlRecord Project where
 
 instance XmlRecord Story where
     toRecords = xml2Records $ tag "stories" /> tag "story"
-    contentToRecord c = 
-        Story { stID           = st "id"
-              , stType         = st "story_type"
-              , stURL          = st "url"
-              , stEstimate     = st "estimate"
-              , stCurrentState = st "current_state"
-              , stDescription  = st "description"
-              , stName         = st "name"
-              , stRequestedBy  = st "requested_by"
-              , stCreatedAt    = st "craeted_at"
-              , stLabels       = st "labels"
-              }
-        where st = item "story" c
+    contentToRecord = storyXmlToRecord

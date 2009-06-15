@@ -43,6 +43,10 @@ addStory :: String -> String -> String -> IO Story
 addStory t projectID title = toRecord <$> tokenPost t (storiesURL projectID) postData
     where postData = ["<story><name>" ++ title ++ "</name></story>"]
 
+iterationGroup :: String -> String -> String -> IO [Story]
+iterationGroup t projectID gname = parseIteration <$> tokenCall t url
+    where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
+
 tokenPost :: String -> String -> [String] -> IO String
 tokenPost t url ps = callRemote url opts
     where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t,
