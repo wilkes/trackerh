@@ -19,15 +19,17 @@ main =
       (_, _, errs) -> putStrLn (concat errs)
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
-runCmd _  "token"     [username, password] = putStrLn    =<< token username password
-runCmd cp "project"   [projectID]          = putProject  =<< project  (getToken cp) projectID
-runCmd cp "projects"  _                    = putProjects =<< projects (getToken cp)
-runCmd cp "story"     [projectID, storyID] = putStory    =<< story    (getToken cp) projectID storyID
-runCmd cp "stories"   [projectID]          = putStories  =<< stories  (getToken cp) projectID
-runCmd cp "search"    (projectID:rest)     = putStories  =<< search   (getToken cp) projectID (intercalate " " rest)
-runCmd cp "add"       (projectID:rest)     = putStory    =<< addStory (getToken cp) projectID (intercalate " " rest)
-runCmd cp "iteration" [projectID,gname]    = putStories  =<< iterationGroup (getToken cp) projectID gname
-runCmd _  _           _                    = printUsage
+runCmd _  "token"     [uid, pwd]     = putStrLn    =<< token uid pwd
+runCmd cp "project"   [pid]          = putProject  =<< project  (getToken cp) pid
+runCmd cp "projects"  _              = putProjects =<< projects (getToken cp)
+runCmd cp "story"     [pid, storyID] = putStory    =<< story    (getToken cp) pid storyID
+runCmd cp "stories"   [pid]          = putStories  =<< stories  (getToken cp) pid
+runCmd cp "search"    (pid:rest)     = putStories  =<< search   (getToken cp) pid (intercalate " " rest)
+runCmd cp "add"       (pid:rest)     = putStory    =<< addStory (getToken cp) pid (intercalate " " rest)
+runCmd cp "done"      [pid]          = putStories  =<< iterationGroup (getToken cp) pid "done"
+runCmd cp "current"   [pid]          = putStories  =<< iterationGroup (getToken cp) pid "current"
+runCmd cp "backlog"   [pid]          = putStories  =<< iterationGroup (getToken cp) pid "backlog"
+runCmd _  _           _              = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
 loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
@@ -45,8 +47,10 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh stories PROJECT_ID\n\
                       \trackerh story STORY_ID\n\
                       \trackerh add PROJECT_ID TITLE\n\
+                      \trackerh done PROJECT_ID\n\
+                      \trackerh current PROJECT_ID\n\
+                      \trackerh backlog PROJECT_ID\n\
                       \\n"
-
 
 putItems :: (a -> IO ()) -> [a] -> IO ()
 putItems putFunction items = mapM_ (\s -> putStrLn "" >> putFunction s) items
