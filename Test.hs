@@ -13,9 +13,14 @@ import Tracker.Xml
 
 main = defaultMain tests
 
-tests = [testCase "test_story_to_record" test_story_to_record]
+tests = [ testGroup "Story"
+          [testCase "test_story_to_record" test_story_to_record]
+        , testGroup "Project"
+          [testCase "test_project_to_record" test_project_to_record]
+        ]
 
 test_story_to_record = toRecord storyXml @=? storyRecord
+test_project_to_record = toRecord projectXml @=? projectRecord
 
 storyXml = "<story>\
         \<id type=\"integer\">804610</id>\
@@ -40,3 +45,18 @@ storyRecord = Story { stID           = "804610"
                     , stCreatedAt    = "2009/06/14 14:08:45 GMT"
                     , stLabels       = ""
                     }
+
+projectXml = "<project>\
+  \<id>18898</id>\
+  \<name>TrackerH</name>\
+  \<iteration_length type=\"integer\">1</iteration_length>\
+  \<week_start_day>Sunday</week_start_day>\
+  \<point_scale>0,1,2,3,5,8</point_scale>\
+\</project>"
+
+projectRecord = Project { prjID              = "18898"
+                        , prjName            = "TrackerH"
+                        , prjIterationLength = "1"
+                        , prjWeekStartDay    = "Sunday"
+                        , prjPointScale      = "0,1,2,3,5,8"
+                        }
