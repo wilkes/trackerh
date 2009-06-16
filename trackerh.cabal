@@ -19,3 +19,15 @@ Executable trackerh
                , directory
   Other-Modules: Tracker.Api
   GHC-Options: -O2 -Wall -Werror
+
+
+Executable trackerh-test
+  Main-Is: Test.hs
+  Build-Depends: base
+               , test-framework
+               , test-framework-quickcheck
+               , test-framework-hunit
+               , HUnit
+               , QuickCheck < 2.0
+  Other-Modules: Tracker.Api
+  GHC-Options: -O2 -threaded

@@ -30,7 +30,7 @@ storyXmlToRecord c =
           , stDescription  = st "description"
           , stName         = st "name"
           , stRequestedBy  = st "requested_by"
-          , stCreatedAt    = st "craeted_at"
+          , stCreatedAt    = st "created_at"
           , stLabels       = st "labels"
           }
     where st = item "story" c
