@@ -9,6 +9,7 @@ Library
                , HaXml < 1.19
                , network
   Exposed-Modules: Tracker.Api
+  GHC-Options: -O2 -Wall -Werror
 
 Executable trackerh
   Main-Is: Main.hs
@@ -17,4 +18,4 @@ Executable trackerh
                , MissingH
                , directory
   Other-Modules: Tracker.Api
-  GHC-Options: -O2 -Wall -Werror -fforce-recomp
+  GHC-Options: -O2 -Wall -Werror

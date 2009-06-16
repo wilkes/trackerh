@@ -47,9 +47,6 @@ forceGet k cp = forceEither $ get cp "" k
 getToken :: ConfigParser -> String
 getToken    = forceGet "token"
 
-getProject :: ConfigParser -> String
-getProject  = forceGet "project"
-
 printUsage :: IO ()
 printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh token username password\n\
