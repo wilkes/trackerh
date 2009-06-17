@@ -28,9 +28,9 @@ runCmd cp "story"     [pid, storyID] = putStory    =<< story    (getToken cp) pi
 runCmd cp "stories"   [pid]          = putStories  =<< stories  (getToken cp) pid
 runCmd cp "search"    (pid:rest)     = putStories  =<< search   (getToken cp) pid (intercalate " " rest)
 runCmd cp "add"       (pid:rest)     = putStory    =<< addStory (getToken cp) pid (intercalate " " rest)
-runCmd cp "done"      [pid]          = putStories  =<< iterationGroup (getToken cp) pid "done"
-runCmd cp "current"   [pid]          = putStories  =<< iterationGroup (getToken cp) pid "current"
-runCmd cp "backlog"   [pid]          = putStories  =<< iterationGroup (getToken cp) pid "backlog"
+runCmd cp "done"      [pid]          = putIterations =<< iterationGroup (getToken cp) pid "done"
+runCmd cp "current"   [pid]          = putIterations =<< iterationGroup (getToken cp) pid "current"
+runCmd cp "backlog"   [pid]          = putIterations  =<< iterationGroup (getToken cp) pid "backlog"
 runCmd _  _           _              = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
@@ -70,11 +70,24 @@ putProjects :: [Project] -> IO ()
 putProjects = putItems putProject
 
 putProject :: Project -> IO ()
-putProject = putItem [(prjName, "Name"),
-                      (prjID, "ID"),
-                      (prjIterationLength, "Iteration Length"),
-                      (prjWeekStartDay, "Start Day"),
-                      (prjPointScale, "Point Scale")]
+putProject = putItem [ (prjName, "Name")
+                     , (prjID, "ID")
+                     , (prjIterationLength, "Iteration Length")
+                     , (prjWeekStartDay, "Start Day")
+                     , (prjPointScale, "Point Scale")
+                     ]
+
+putIterations :: [Iteration] -> IO ()
+putIterations = mapM_ putIteration
+
+putIteration :: Iteration -> IO ()
+putIteration itr = putItem [ (itrID, "ID")
+                           , (itrNumber, "Number") 
+                           , (itrStartDate, "Start")
+                           , (itrEndDate, "End") 
+                           ]  itr >>
+               putStories (itrStories itr)
+
 
 putStories :: [Story] -> IO ()
 putStories = putItems putStory

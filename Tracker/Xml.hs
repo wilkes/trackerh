@@ -22,6 +22,12 @@ instance XmlRecord Story where
     toRecords = xml2Records $ tag "stories" /> tag "story"
     contentToRecord = storyXmlToRecord
 
+instance XmlRecord Iteration where
+    toRecords = xml2Records $ tag "iterations" /> tag "iteration"
+    contentToRecord = iterationXmlToRecord
+
+
+
 parseResponse :: String -> Content
 parseResponse res = content $ xmlParse "response" res
     where content (Document _ _ e _) = CElem e
@@ -34,10 +40,28 @@ item :: String -> Content -> String -> String
 item parent content key = 
     verbatim $ tag parent /> tag key /> txt $ content
 
-parseIteration :: String -> [Story]
-parseIteration s = map storyXmlToRecord $ storyPath $ parseResponse s
-    where
-      storyPath = tag "iterations" /> tag "iteration" /> tag "stories" /> tag "story"
+parseIteration :: String -> Iteration
+parseIteration s = iterationXmlToRecord $ parseResponse s
+
+projectXmlToRecord :: Content -> Project
+projectXmlToRecord c = 
+    Project { prjID              = st "id"
+            , prjName            = st "name"
+            , prjIterationLength = st "iteration_length"
+            , prjWeekStartDay    = st "week_start_day"
+            , prjPointScale      = st "point_scale"
+            }
+    where st = item "project" c
+
+iterationXmlToRecord :: Content -> Iteration
+iterationXmlToRecord c = 
+    Iteration { itrID            = st "id"
+              , itrNumber        = st "number"
+              , itrStartDate     = st "start"
+              , itrEndDate       = st "finish"
+              , itrStories       = map storyXmlToRecord $ tag "iteration" /> tag "stories" /> tag "story" $ c
+              }
+    where st = item "iteration" c
 
 storyXmlToRecord :: Content -> Story
 storyXmlToRecord c = 
@@ -53,13 +77,3 @@ storyXmlToRecord c =
           , stLabels       = st "labels"
           }
     where st = item "story" c
-
-projectXmlToRecord :: Content -> Project
-projectXmlToRecord c = 
-    Project { prjID              = st "id"
-            , prjName            = st "name"
-            , prjIterationLength = st "iteration_length"
-            , prjWeekStartDay    = st "week_start_day"
-            , prjPointScale      = st "point_scale"
-            }
-    where st = item "project" c

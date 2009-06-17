@@ -58,8 +58,8 @@ addStory :: Token -> ProjectID -> String -> IO Story
 addStory t projectID title = toRecord <$> tokenPost t (storiesURL projectID) postData
     where postData = ["<story><name>" ++ title ++ "</name></story>"]
 
-iterationGroup :: Token -> ProjectID -> String -> IO [Story]
-iterationGroup t projectID gname = parseIteration <$> tokenCall t url
+iterationGroup :: Token -> ProjectID -> String -> IO [Iteration]
+iterationGroup t projectID gname = toRecords <$> tokenCall t url
     where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
 
 tokenPost :: Token -> String -> [String] -> IO String

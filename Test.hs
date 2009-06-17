@@ -15,16 +15,24 @@ main = defaultMain tests
 
 tests = [ testGroup "Story"
           [ testCase "test_story_to_record" test_story_to_record
-          , testCase "test_stories_to_records" test_stories_to_records]
+          , testCase "test_stories_to_records" test_stories_to_records
+          ]
         , testGroup "Project"
           [ testCase "test_project_to_record" test_project_to_record
-          , testCase "test_projects_to_records" test_projects_to_records]
+          , testCase "test_projects_to_records" test_projects_to_records
+          ]
+        , testGroup "Iterations"
+          [ testCase "test_iterations_to_records" test_iterations_to_records
+          ]
         ]
 
-test_story_to_record = toRecord storyXml @=? storyRecord
+test_story_to_record    = toRecord storyXml @=? storyRecord
 test_stories_to_records = toRecords (storiesXml 3) @=? (replicate 3 storyRecord)
-test_project_to_record = toRecord projectXml @=? projectRecord
+
+test_project_to_record   = toRecord projectXml @=? projectRecord
 test_projects_to_records = toRecords (projectsXml 3) @=? (replicate 3 projectRecord)
+
+test_iterations_to_records = toRecords (iterationsXml 2 3) @=? (replicate 2 $ iterationRecord 3)
 
 
 storyXml = "<story>\
@@ -52,7 +60,7 @@ storyRecord = Story { stID           = "804610"
                     }
 
 storiesXml n = "<stories type=\"array\">" ++ stories ++ "</stories>"
-    where stories = foldl (++) "" $ replicate n storyXml
+    where stories = concat $ replicate n storyXml
 
 
 projectXml = "<project>\
@@ -64,7 +72,7 @@ projectXml = "<project>\
 \</project>"
 
 projectsXml n = "<projects type=\"array\">" ++ projects ++ "</projects>"
-    where projects = foldl (++) "" $ replicate n projectXml
+    where projects = concat $ replicate n projectXml
 
 projectRecord = Project { prjID              = "18898"
                         , prjName            = "TrackerH"
@@ -72,3 +80,21 @@ projectRecord = Project { prjID              = "18898"
                         , prjWeekStartDay    = "Sunday"
                         , prjPointScale      = "0,1,2,3,5,8"
                         }
+ 
+iterationsXml n m = "<iterations type=\"array\">" ++ iterations ++ "</iterations>"
+   where iterations = concat $ replicate n iteration
+         iteration = "<iteration>\
+                     \<id type=\"integer\">1</id>\
+                     \<number type=\"integer\">1</number>\
+                     \<start type=\"datetime\">2009/06/14 00:00:00 UTC</start>\
+                     \<finish type=\"datetime\">2009/06/21 00:00:00 UTC</finish>" ++
+                     storiesXml m ++
+                     "</iteration>"
+
+iterationRecord m = Iteration { itrID            = "1"
+                              , itrNumber        = "1"
+                              , itrStartDate     = "2009/06/14 00:00:00 UTC"
+                              , itrEndDate       = "2009/06/21 00:00:00 UTC"
+                              , itrStories       = replicate m storyRecord
+                              }
+
