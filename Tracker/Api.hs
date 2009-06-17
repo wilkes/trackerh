@@ -5,9 +5,11 @@ module Tracker.Api
     , projects
     , story
     , stories
+    , paginatedStories
     , search
     , addStory
-    , iterationGroup
+    , iterations
+    , paginatedIterations
     )
     where
 import Control.Applicative((<$>))
@@ -27,7 +29,7 @@ serviceURL = "https://www.pivotaltracker.com/services/v2/"
 projectURL :: String
 projectURL = serviceURL ++ "projects"
 
-storiesURL :: String -> String
+storiesURL :: ProjectID -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
 token :: String -> String -> IO Token
@@ -45,6 +47,10 @@ project t projectID = toRecord <$> tokenCall t url
 stories :: Token -> ProjectID -> IO [Story]
 stories t projectID = toRecords <$> tokenCall t (storiesURL projectID)
 
+paginatedStories :: Token -> ProjectID -> Int -> Int -> IO [Story]
+paginatedStories t projectID limit offset = toRecords <$> tokenCall t url
+    where url = (storiesURL projectID) ++ (limitAndOffset limit offset)
+
 story :: Token -> ProjectID -> StoryID -> IO Story
 story t projectID storyID = toRecord <$> tokenCall t url 
     where url = (storiesURL projectID) ++ "/" ++ storyID
@@ -58,9 +64,21 @@ addStory :: Token -> ProjectID -> String -> IO Story
 addStory t projectID title = toRecord <$> tokenPost t (storiesURL projectID) postData
     where postData = ["<story><name>" ++ title ++ "</name></story>"]
 
-iterationGroup :: Token -> ProjectID -> String -> IO [Iteration]
-iterationGroup t projectID gname = toRecords <$> tokenCall t url
+iterations :: Token -> ProjectID -> String -> IO [Iteration]
+iterations t projectID gname = toRecords <$> tokenCall t url
     where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
+
+paginatedIterations :: Token -> ProjectID -> Int -> Int -> IO [Iteration]
+paginatedIterations t projectID limit offset = toRecords <$> tokenCall t url
+    where url = projectURL ++ "/" ++ projectID ++ "/iterations" ++ (limitAndOffset limit offset)
+
+limitAndOffset :: Int -> Int -> String
+limitAndOffset l o
+    | l <= 0    = ""
+    | otherwise = "?limit=" ++ show l ++ offset
+    where offset = if o <= 0
+                   then ""
+                   else "&offset=" ++ show o
 
 tokenPost :: Token -> String -> [String] -> IO String
 tokenPost t url ps = callRemote url opts

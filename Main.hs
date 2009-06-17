@@ -21,18 +21,20 @@ main = do
       o = [Option "c" ["config"] (ReqArg (stdRequired "c") "FILE") "Specify config"]
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
-runCmd _  "token"     [uid, pwd]     = putStrLn    =<< token uid pwd
-runCmd cp "project"   [pid]          = putProject  =<< project  (getToken cp) pid
-runCmd cp "projects"  _              = putProjects =<< projects (getToken cp)
-runCmd cp "story"     [pid, storyID] = putStory    =<< story    (getToken cp) pid storyID
-runCmd cp "stories"   [pid]          = putStories  =<< stories  (getToken cp) pid
-runCmd cp "search"    (pid:rest)     = putStories  =<< search   (getToken cp) pid (intercalate " " rest)
-runCmd cp "add"       (pid:rest)     = putStory    =<< addStory (getToken cp) pid (intercalate " " rest)
-runCmd cp "done"      [pid]          = putIterations =<< iterationGroup (getToken cp) pid "done"
-runCmd cp "current"   [pid]          = putIterations =<< iterationGroup (getToken cp) pid "current"
-runCmd cp "backlog"   [pid]          = putIterations  =<< iterationGroup (getToken cp) pid "backlog"
-runCmd cp "iterations"[pid]          = putIterations  =<< iterationGroup (getToken cp) pid ""
-runCmd _  _           _              = printUsage
+runCmd _  "token"     [uid, pwd]         = putStrLn      =<< token uid pwd
+runCmd cp "project"   [pid]              = putProject    =<< project  (getToken cp) pid
+runCmd cp "projects"  _                  = putProjects   =<< projects (getToken cp)
+runCmd cp "story"     [pid, storyID]     = putStory      =<< story    (getToken cp) pid storyID
+runCmd cp "stories"   [pid]              = putStories    =<< stories  (getToken cp) pid
+runCmd cp "stories"   [pid,limit,offset] = putStories    =<< paginatedStories (getToken cp) pid (read limit) (read offset)
+runCmd cp "search"    (pid:rest)         = putStories    =<< search   (getToken cp) pid (intercalate " " rest)
+runCmd cp "add"       (pid:rest)         = putStory      =<< addStory (getToken cp) pid (intercalate " " rest)
+runCmd cp "done"      [pid]              = putIterations =<< iterations (getToken cp) pid "done"
+runCmd cp "current"   [pid]              = putIterations =<< iterations (getToken cp) pid "current"
+runCmd cp "backlog"   [pid]              = putIterations =<< iterations (getToken cp) pid "backlog"
+runCmd cp "iterations"[pid]              = putIterations =<< iterations (getToken cp) pid ""
+runCmd cp "iterations"[pid,limit,offset] = putIterations =<< paginatedIterations (getToken cp) pid (read limit) (read offset)
+runCmd _  _           _                  = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
 loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
