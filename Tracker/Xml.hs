@@ -3,6 +3,25 @@ module Tracker.Xml where
 import Text.XML.HaXml
 import Tracker.Types
 
+class XmlRecord a where
+    xml2Records :: CFilter -> String -> [a]
+    xml2Records p s = map contentToRecord $ p $ parseResponse s
+
+    toRecord :: String -> a
+    toRecord = contentToRecord . parseResponse
+
+    contentToRecord :: Content -> a
+    toRecords :: String -> [a]
+
+
+instance XmlRecord Project where
+    toRecords = xml2Records $ tag "projects" /> tag "project"
+    contentToRecord = projectXmlToRecord
+
+instance XmlRecord Story where
+    toRecords = xml2Records $ tag "stories" /> tag "story"
+    contentToRecord = storyXmlToRecord
+
 parseResponse :: String -> Content
 parseResponse res = content $ xmlParse "response" res
     where content (Document _ _ e _) = CElem e
@@ -35,28 +54,12 @@ storyXmlToRecord c =
           }
     where st = item "story" c
 
-class XmlRecord a where
-    xml2Records :: CFilter -> String -> [a]
-    xml2Records p s = map contentToRecord $ p $ parseResponse s
-
-    toRecord :: String -> a
-    toRecord = contentToRecord . parseResponse
-
-    contentToRecord :: Content -> a
-    toRecords :: String -> [a]
-
-
-instance XmlRecord Project where
-    toRecords = xml2Records $ tag "projects" /> tag "project"
-    contentToRecord c = 
-        Project { prjID              = st "id"
-                , prjName            = st "name"
-                , prjIterationLength = st "iteration_length"
-                , prjWeekStartDay    = st "week_start_day"
-                , prjPointScale      = st "point_scale"
-                }
-        where st = item "project" c
-
-instance XmlRecord Story where
-    toRecords = xml2Records $ tag "stories" /> tag "story"
-    contentToRecord = storyXmlToRecord
+projectXmlToRecord :: Content -> Project
+projectXmlToRecord c = 
+    Project { prjID              = st "id"
+            , prjName            = st "name"
+            , prjIterationLength = st "iteration_length"
+            , prjWeekStartDay    = st "week_start_day"
+            , prjPointScale      = st "point_scale"
+            }
+    where st = item "project" c
