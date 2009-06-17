@@ -31,6 +31,7 @@ runCmd cp "add"       (pid:rest)     = putStory    =<< addStory (getToken cp) pi
 runCmd cp "done"      [pid]          = putIterations =<< iterationGroup (getToken cp) pid "done"
 runCmd cp "current"   [pid]          = putIterations =<< iterationGroup (getToken cp) pid "current"
 runCmd cp "backlog"   [pid]          = putIterations  =<< iterationGroup (getToken cp) pid "backlog"
+runCmd cp "iterations"[pid]          = putIterations  =<< iterationGroup (getToken cp) pid ""
 runCmd _  _           _              = printUsage
 
 loadCP :: Maybe FilePath -> IO ConfigParser
