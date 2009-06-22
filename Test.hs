@@ -17,15 +17,19 @@ main = defaultMain tests
 
 tests = [ testGroup "Story"
           [ testCase "test_story_to_record" test_story_to_record
-          , testCase "test_story_unpickle" test_story_unpickle
           , testCase "test_stories_to_records" test_stories_to_records
+          , testCase "test_story_unpickle" test_story_unpickle
+          , testCase "test_stories_unpickle" test_stories_unpickle
           ]
         , testGroup "Project"
           [ testCase "test_project_to_record" test_project_to_record
           , testCase "test_projects_to_records" test_projects_to_records
+          , testCase "test_project_unpickle" test_project_unpickle
+          , testCase "test_projects_unpickle" test_projects_unpickle
           ]
         , testGroup "Iterations"
           [ testCase "test_iterations_to_records" test_iterations_to_records
+          , testCase "test_iterations_unpickle" test_iterations_unpickle
           ]
         ]
 
@@ -36,6 +40,24 @@ test_story_unpickle = do
   st <- runUnpickle storyXml xpStory
   1 @=? (length st)
   storyRecord @=? (head st)
+
+test_stories_unpickle = do
+  (stories:[]) <- runUnpickle (storiesXml 3) xpStories
+  3 @=? (length stories)
+  (replicate 3 storyRecord) @=? stories
+
+test_project_unpickle = do
+  (project:[]) <- runUnpickle projectXml xpProject
+  projectRecord @=? project
+
+test_projects_unpickle = do
+  (projects:[]) <- runUnpickle (projectsXml 3) xpProjects
+  3 @=? (length projects)
+  (replicate 3 projectRecord) @=? projects
+
+test_iterations_unpickle = do
+  (iterations:[]) <- runUnpickle (iterationsXml 2 3) xpIterations
+  (replicate 2 $ iterationRecord 3) @=? iterations
 
 test_project_to_record   = toRecord projectXml @=? projectRecord
 test_projects_to_records = toRecords (projectsXml 3) @=? (replicate 3 projectRecord)

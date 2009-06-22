@@ -12,11 +12,22 @@ instance XmlPickler Story where
 instance XmlPickler Iteration where
     xpickle = xpIteration
 
-xpProject = undefined
-xpIteration = undefined
+xpProjects :: PU Projects
+xpProjects = xpListOf "projects"
 
+xpProject :: PU Project
+xpProject = xpElem "project" $
+            xpWrap ( \(pid,name,itlength,day,scale) -> Project pid name itlength day scale
+                   , \p -> (prjID p, prjName p, prjIterationLength p, prjWeekStartDay p, prjPointScale p)
+                   ) $
+            xp5Tuple (xpElVal "id")
+                     (xpElVal "name")
+                     (xpElVal "iteration_length")
+                     (xpElVal "week_start_day")
+                     (xpElVal "point_scale")
 
-xpElVal t = xpElem t xpText0
+xpStories :: PU Stories
+xpStories = xpListOf "stories" 
 
 xpStory :: PU Story
 xpStory = xpElem "story" $
@@ -39,4 +50,25 @@ xpStory = xpElem "story" $
                            (xpElVal "created_at")
                            (xpOption (xpElVal "labels"))
                  )
+
+xpIterations :: PU Iterations
+xpIterations = xpListOf "iterations"
+
+xpIteration :: PU Iteration
+xpIteration = xpElem "iteration" $
+              xpWrap ( \(a,b,c,d,e) -> Iteration a b c d e
+                     , \itr -> ( itrID itr, itrNumber itr
+                               , itrStartDate itr, itrEndDate itr, itrStories itr)
+                     ) $ 
+              xp5Tuple (xpElVal "id")
+                       (xpElVal "number")
+                       (xpElVal "start")
+                       (xpElVal "finish")
+                       xpStories
+
+xpElVal :: String -> PU String
+xpElVal t = xpElem t xpText0
+
+xpListOf :: (XmlPickler a) => String -> PU [a]
+xpListOf t = xpElem t $ xpList $ xpickle
 
