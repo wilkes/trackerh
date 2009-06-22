@@ -74,6 +74,10 @@ storyXmlToRecord c =
           , stName         = st "name"
           , stRequestedBy  = st "requested_by"
           , stCreatedAt    = st "created_at"
-          , stLabels       = st "labels"
+          , stLabels       = labels
           }
     where st = item "story" c
+          labels = case st "labels" of
+                     "" -> Nothing
+                     v  -> Just v
+               

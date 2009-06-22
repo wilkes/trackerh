@@ -1,5 +1,6 @@
 module Tracker.Types where
 
+type Projects = [Project]
 data Project =
     Project { prjID              :: String
             , prjName            :: String
@@ -9,6 +10,8 @@ data Project =
             }
     deriving (Eq, Show)
 
+
+type Stories = [Story]
 data Story = 
     Story { stID           :: String
           , stType         :: String
@@ -19,15 +22,17 @@ data Story =
           , stName         :: String
           , stRequestedBy  :: String
           , stCreatedAt    :: String
-          , stLabels       :: String
+          , stLabels       :: Maybe String
           }
     deriving (Eq, Show)
 
+
+type Iterations = [Iteration]
 data Iteration =
     Iteration { itrID        :: String
               , itrNumber    :: String
               , itrStartDate :: String
               , itrEndDate   :: String
-              , itrStories   :: [Story]
+              , itrStories   :: Stories
               }
     deriving (Eq, Show)

@@ -1,5 +1,6 @@
 module Main where
 
+import Text.XML.HXT.Arrow
 
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit
@@ -10,11 +11,13 @@ import Test.HUnit
 
 import Tracker.Types
 import Tracker.Xml
+import Tracker.Pickle
 
 main = defaultMain tests
 
 tests = [ testGroup "Story"
           [ testCase "test_story_to_record" test_story_to_record
+          , testCase "test_story_unpickle" test_story_unpickle
           , testCase "test_stories_to_records" test_stories_to_records
           ]
         , testGroup "Project"
@@ -29,11 +32,20 @@ tests = [ testGroup "Story"
 test_story_to_record    = toRecord storyXml @=? storyRecord
 test_stories_to_records = toRecords (storiesXml 3) @=? (replicate 3 storyRecord)
 
+test_story_unpickle = do
+  st <- runUnpickle storyXml xpStory
+  1 @=? (length st)
+  storyRecord @=? (head st)
+
 test_project_to_record   = toRecord projectXml @=? projectRecord
 test_projects_to_records = toRecords (projectsXml 3) @=? (replicate 3 projectRecord)
 
 test_iterations_to_records = toRecords (iterationsXml 2 3) @=? (replicate 2 $ iterationRecord 3)
 
+
+
+runUnpickle :: String -> PU a -> IO [a]
+runUnpickle xml pickler = runX $ readString [] xml >>> xunpickleVal pickler
 
 storyXml = "<story>\
         \<id type=\"integer\">804610</id>\
@@ -56,7 +68,7 @@ storyRecord = Story { stID           = "804610"
                     , stName         = "Add support for ssl or not"
                     , stRequestedBy  = "Wilkes Joiner"
                     , stCreatedAt    = "2009/06/14 14:08:45 GMT"
-                    , stLabels       = ""
+                    , stLabels       = Nothing
                     }
 
 storiesXml n = "<stories type=\"array\">" ++ stories ++ "</stories>"

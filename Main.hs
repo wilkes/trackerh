@@ -2,6 +2,7 @@ module Main where
 
 import System.Environment
 import Data.List
+import Data.Maybe
 import System.Console.GetOpt.Utils
 import System.Console.GetOpt
 import System.Directory
@@ -107,6 +108,6 @@ putStory = putItem [(stName         ,"Name"),
                     (stCurrentState ,"Status"),
                     (stRequestedBy  ,"Requestor"),
                     (stCreatedAt    ,"Created"),
-                    (stLabels       ,"Labels"),
+                    (fromJust . stLabels       ,"Labels"),
                     (stDescription  ,"Description")]
 
