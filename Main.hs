@@ -26,6 +26,7 @@ runCmd _  "token"     [uid, pwd]         = putStrLn      =<< token uid pwd
 runCmd cp "project"   [pid]              = putProject    =<< project  (getToken cp) pid
 runCmd cp "projects"  _                  = putProjects   =<< projects (getToken cp)
 runCmd cp "story"     [pid, storyID]     = putStory      =<< story    (getToken cp) pid storyID
+runCmd cp "delete"    [pid, storyID]     = putStory      =<< deleteStory (getToken cp) pid storyID
 runCmd cp "stories"   [pid]              = putStories    =<< stories  (getToken cp) pid 0 0
 runCmd cp "stories"   [pid,limit,offset] = putStories    =<< stories  (getToken cp) pid (read limit) (read offset)
 runCmd cp "search"    (pid:rest)         = putStories    =<< search   (getToken cp) pid (intercalate " " rest)
@@ -59,6 +60,7 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh stories PROJECT_ID\n\
                       \trackerh stories PROJECT_ID LIMIT OFFSET\n\
                       \trackerh story PROJECT_ID STORY_ID\n\
+                      \trackerh delete PROJECT_ID STORY_ID\n\
                       \trackerh add PROJECT_ID TITLE\n\
                       \trackerh done PROJECT_ID\n\
                       \trackerh current PROJECT_ID\n\
