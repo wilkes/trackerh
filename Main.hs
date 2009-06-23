@@ -58,7 +58,7 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh project PROJECT_ID\n\
                       \trackerh stories PROJECT_ID\n\
                       \trackerh stories PROJECT_ID LIMIT OFFSET\n\
-                      \trackerh story STORY_ID\n\
+                      \trackerh story PROJECT_ID STORY_ID\n\
                       \trackerh add PROJECT_ID TITLE\n\
                       \trackerh done PROJECT_ID\n\
                       \trackerh current PROJECT_ID\n\
@@ -88,7 +88,7 @@ putIterations :: [Iteration] -> IO ()
 putIterations = mapM_ putIteration
 
 putIteration :: Iteration -> IO ()
-putIteration itr = putItem [ (itrID, "ID")
+putIteration itr = putItem [ (show . itrID, "ID")
                            , (itrNumber, "Number") 
                            , (itrStartDate, "Start")
                            , (itrEndDate, "End") 
@@ -100,14 +100,14 @@ putStories :: [Story] -> IO ()
 putStories = putItems putStory
 
 putStory :: Story -> IO ()
-putStory = putItem [(stName         ,"Name"),
-                    (stID           ,"ID"),
-                    (stType         ,"Type"),
-                    (stURL          ,"URL"),
-                    (stEstimate     ,"Estimate"),
-                    (stCurrentState ,"Status"),
-                    (stRequestedBy  ,"Requestor"),
-                    (stCreatedAt    ,"Created"),
-                    (fromJust . stLabels       ,"Labels"),
-                    (stDescription  ,"Description")]
+putStory = putItem [(stName          ,"Name"),
+                    (stID            ,"ID"),
+                    (stType          ,"Type"),
+                    (stURL           ,"URL"),
+                    (show . stEstimate      ,"Estimate"),
+                    (stCurrentState  ,"Status"),
+                    (stRequestedBy   ,"Requestor"),
+                    (stCreatedAt     ,"Created"),
+                    (show . stLabels ,"Labels"),
+                    (stDescription   ,"Description")]
 

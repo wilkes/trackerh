@@ -10,7 +10,7 @@ Library
                , hxt
                , network
   Exposed-Modules: Tracker.Api
-  GHC-Options: -O2 -Wall
+  GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans 
 
 Executable trackerh
   Main-Is: Main.hs
@@ -19,8 +19,7 @@ Executable trackerh
                , MissingH
                , directory
   Other-Modules: Tracker.Api
-  GHC-Options: -O2 -Wall
-
+  GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans 
 
 Executable trackerh-test
   Main-Is: Test.hs
@@ -31,4 +30,4 @@ Executable trackerh-test
                , HUnit
                , QuickCheck < 2.0
   Other-Modules: Tracker.Api
-  GHC-Options: -O2 -threaded
+  GHC-Options: -O2 -threaded 

@@ -10,31 +10,22 @@ import Test.QuickCheck
 import Test.HUnit
 
 import Tracker.Types
-import Tracker.Xml
 import Tracker.Pickle
 
 main = defaultMain tests
 
 tests = [ testGroup "Story"
-          [ testCase "test_story_to_record" test_story_to_record
-          , testCase "test_stories_to_records" test_stories_to_records
-          , testCase "test_story_unpickle" test_story_unpickle
+          [ testCase "test_story_unpickle" test_story_unpickle
           , testCase "test_stories_unpickle" test_stories_unpickle
           ]
         , testGroup "Project"
-          [ testCase "test_project_to_record" test_project_to_record
-          , testCase "test_projects_to_records" test_projects_to_records
-          , testCase "test_project_unpickle" test_project_unpickle
+          [ testCase "test_project_unpickle" test_project_unpickle
           , testCase "test_projects_unpickle" test_projects_unpickle
           ]
         , testGroup "Iterations"
-          [ testCase "test_iterations_to_records" test_iterations_to_records
-          , testCase "test_iterations_unpickle" test_iterations_unpickle
+          [ testCase "test_iterations_unpickle" test_iterations_unpickle
           ]
         ]
-
-test_story_to_record    = toRecord storyXml @=? storyRecord
-test_stories_to_records = toRecords (storiesXml 3) @=? (replicate 3 storyRecord)
 
 test_story_unpickle = do
   st <- runUnpickle storyXml xpStory
@@ -59,13 +50,6 @@ test_iterations_unpickle = do
   (iterations:[]) <- runUnpickle (iterationsXml 2 3) xpIterations
   (replicate 2 $ iterationRecord 3) @=? iterations
 
-test_project_to_record   = toRecord projectXml @=? projectRecord
-test_projects_to_records = toRecords (projectsXml 3) @=? (replicate 3 projectRecord)
-
-test_iterations_to_records = toRecords (iterationsXml 2 3) @=? (replicate 2 $ iterationRecord 3)
-
-
-
 runUnpickle :: String -> PU a -> IO [a]
 runUnpickle xml pickler = runX $ readString [] xml >>> xunpickleVal pickler
 
@@ -81,22 +65,24 @@ storyXml = "<story>\
         \<created_at type=\"datetime\">2009/06/14 14:08:45 GMT</created_at>\
       \</story>"
 
-storyRecord = Story { stID           = "804610"
-                    , stType         = "feature"
-                    , stURL          = "http://www.pivotaltracker.com/story/show/804610"
-                    , stEstimate     = "2"
-                    , stCurrentState = "unstarted"
-                    , stDescription  = ""
-                    , stName         = "Add support for ssl or not"
-                    , stRequestedBy  = "Wilkes Joiner"
-                    , stCreatedAt    = "2009/06/14 14:08:45 GMT"
-                    , stLabels       = Nothing
-                    }
+storyRecord = emptyStory { stID           = "804610"
+                         , stType         = "feature"
+                         , stURL          = "http://www.pivotaltracker.com/story/show/804610"
+                         , stEstimate     = Just "2"
+                         , stCurrentState = "unstarted"
+                         , stDescription  = ""
+                         , stName         = "Add support for ssl or not"
+                         , stRequestedBy  = "Wilkes Joiner"
+                         , stCreatedAt    = "2009/06/14 14:08:45 GMT"
+                         , stLabels       = Nothing
+                         , stIteration    = Nothing
+                         }
 
 storiesXml n = "<stories type=\"array\">" ++ stories ++ "</stories>"
     where stories = concat $ replicate n storyXml
 
 
+xmlPI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 projectXml = "<project>\
   \<id>18898</id>\
   \<name>TrackerH</name>\
@@ -125,10 +111,10 @@ iterationsXml n m = "<iterations type=\"array\">" ++ iterations ++ "</iterations
                      storiesXml m ++
                      "</iteration>"
 
-iterationRecord m = Iteration { itrID            = "1"
-                              , itrNumber        = "1"
-                              , itrStartDate     = "2009/06/14 00:00:00 UTC"
-                              , itrEndDate       = "2009/06/21 00:00:00 UTC"
-                              , itrStories       = replicate m storyRecord
-                              }
+iterationRecord m = emptyIteration { itrID            = Just "1"
+                                   , itrNumber        = "1"
+                                   , itrStartDate     = "2009/06/14 00:00:00 UTC"
+                                   , itrEndDate       = "2009/06/21 00:00:00 UTC"
+                                   , itrStories       = replicate m storyRecord
+                                   }
 
