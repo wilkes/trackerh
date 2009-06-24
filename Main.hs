@@ -102,14 +102,14 @@ putStories :: [Story] -> IO ()
 putStories = putItems putStory
 
 putStory :: Story -> IO ()
-putStory = putItem [(stName          ,"Name"),
-                    (stID            ,"ID"),
-                    (stType          ,"Type"),
-                    (stURL           ,"URL"),
+putStory = putItem [(show . stName          ,"Name"),
+                    (show . stID            ,"ID"),
+                    (show . stType          ,"Type"),
+                    (show . stURL           ,"URL"),
                     (show . stEstimate      ,"Estimate"),
-                    (stCurrentState  ,"Status"),
-                    (stRequestedBy   ,"Requestor"),
-                    (stCreatedAt     ,"Created"),
-                    (show . stLabels ,"Labels"),
-                    (stDescription   ,"Description")]
+                    (show . stCurrentState  ,"Status"),
+                    (show . stRequestedBy   ,"Requestor"),
+                    (show . stCreatedAt     ,"Created"),
+                    (show . stLabels        ,"Labels"),
+                    (show . stDescription   ,"Description")]
 

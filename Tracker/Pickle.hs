@@ -1,6 +1,7 @@
 module Tracker.Pickle where
 
-import Text.XML.HXT.Arrow.Pickle
+import Text.XML.HXT.Arrow
+--import Text.XML.HXT.Arrow.Pickle
 import Tracker.Types
 
 instance XmlPickler Project where
@@ -64,21 +65,21 @@ xpStory = xpElem "story" $
                             )
                           )
                  ) $
-          xpTriple (xp5Tuple (xpElVal "id")
-                             (xpElVal "story_type")
-                             (xpElVal "url")
+          xpTriple (xp5Tuple (xpOption $ xpElVal "id")
+                             (xpOption (xpElVal "story_type"))
+                             (xpOption (xpElVal "url"))
                              (xpOption (xpElVal "estimate"))
-                             (xpElVal "current_state")
+                             (xpOption (xpElVal "current_state"))
                    )
-                   (xp5Tuple (xpElVal "description")
-                             (xpElVal "name")
-                             (xpElVal "requested_by")
-                             (xpOption (xpElVal "owned_by"))
-                             (xpElVal "created_at")
+                   (xp5Tuple (xpOption $ xpElVal "description")
+                             (xpOption $ xpElVal "name")
+                             (xpOption $ xpElVal "requested_by")
+                             (xpOption $ xpElVal "owned_by")
+                             (xpOption $ xpElVal "created_at")
                    )
-                   (xpTriple (xpOption (xpElVal "accepted_at"))
-                             (xpOption xpIteration)
-                             (xpOption (xpElVal "labels"))
+                   (xpTriple (xpOption $ xpElVal "accepted_at")
+                             (xpOption   xpIteration)
+                             (xpOption $ xpElVal "labels")
                    )
           
 
@@ -104,3 +105,15 @@ xpElVal t = xpElem t xpText0
 xpListOf :: (XmlPickler a) => String -> PU [a]
 xpListOf t = xpElem t $ xpList $ xpickle
 
+runUnpickle :: (XmlPickler a) => PU a -> String -> IO [a]
+runUnpickle xp xml = runX $ readString options xml >>> xunpickleVal xp
+    where options = [ (a_validate,v_0)
+		    , (a_remove_whitespace,v_1)
+                    -- , (a_trace,v_1)
+		    , (a_preserve_comment, v_0)
+		    ]
+
+runPickle :: (XmlPickler a) => PU a -> a -> IO [String]
+runPickle xp rec = runX $ constA rec >>>
+                          xpickleVal xp >>>
+                          writeDocumentToString []

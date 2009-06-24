@@ -14,7 +14,6 @@ module Tracker.Api
     )
     where
 
-import Text.XML.HXT.Arrow
 import Text.XML.HXT.Arrow.Pickle
 
 import Network.Curl
@@ -37,54 +36,61 @@ storiesURL :: ProjectID -> String
 storiesURL pid = projectURL ++ "/" ++ pid ++ "/stories"
 
 token :: String -> String -> IO TokenSt
-token username password = callRemote url opts >>= runUnpickle xpToken >>= return . tkGuid . head
+token username password = callRemote url opts >>=
+                          runUnpickle xpToken >>=
+                          return . tkGuid . head
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
+
 projects :: TokenSt -> IO Projects
-projects t = unpickleMany t projectURL xpProjects
+projects t = unpickleWith t projectURL xpProjects
 
 project :: TokenSt -> ProjectID -> IO Project
-project t projectID = unpickleOne t url 
-    where url = projectURL ++ "/" ++ projectID
+project t projectID = unpickle t $ projectURL ++ "/" ++ projectID
+
 
 stories :: TokenSt -> ProjectID -> Int -> Int -> IO Stories
-stories t projectID limit offset = unpickleMany t url xpStories
+stories t projectID limit offset = unpickleWith t url xpStories
     where url = (storiesURL projectID) ++ (limitAndOffset limit offset)
 
 story :: TokenSt -> ProjectID -> StoryID -> IO Story
-story t projectID storyID = unpickleOne t url 
+story t projectID storyID = unpickle t url 
     where url = (storiesURL projectID) ++ "/" ++ storyID
-
-deleteStory :: TokenSt -> ProjectID -> StoryID -> IO Story
-deleteStory t projectID storyID = tokenDelete t url >>= runUnpickle xpickle >>= return . head
-    where url = (storiesURL projectID) ++ "/" ++ storyID
-
-updateStory :: TokenSt -> ProjectID -> Story -> IO Story
-updateStory t pid st = runPickle xpStory st >>=
-                       tokenPut t url >>=
-                       runUnpickle xpStory >>=
-                       return . head
-    where url = (storiesURL pid) ++ "/" ++ (stID st)
 
 search :: TokenSt -> ProjectID -> String -> IO [Story]
-search t projectID qstring = unpickleMany t url xpStories
+search t projectID qstring = unpickleWith t url xpStories
     where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
 addStory :: TokenSt -> ProjectID -> String -> IO Story
-addStory t projectID title = tokenPost t (storiesURL projectID) postData >>=
-                             runUnpickle xpStory >>=
-                             return . head
-    where postData = ["<story><name>" ++ title ++ "</name></story>"]
+addStory t projectID title = createStory t projectID $ emptyStory {stName = Just title}
+
+createStory :: TokenSt -> ProjectID -> Story -> IO Story
+createStory t projectID st = pushEntity st xpStory (tokenPOST t (storiesURL projectID))
+
+updateStory :: TokenSt -> ProjectID -> Story -> IO Story
+updateStory t pid st = pushEntity st xpStory (tokenPUT t url)
+    where url = (storiesURL pid) ++ "/" ++ stid
+          stid = case (stID st) of
+                   Nothing -> ""
+                   Just x  -> x
+
+deleteStory :: TokenSt -> ProjectID -> StoryID -> IO Story
+deleteStory t projectID storyID = tokenDELETE t url >>=
+                                  runUnpickle xpickle >>=
+                                  return . head
+    where url = (storiesURL projectID) ++ "/" ++ storyID
+
 
 iterations :: TokenSt -> ProjectID -> String -> IO [Iteration]
-iterations t projectID gname = unpickleMany t url xpIterations
+iterations t projectID gname = unpickleWith t url xpIterations
     where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
 
 paginatedIterations :: TokenSt -> ProjectID -> Int -> Int -> IO [Iteration]
-paginatedIterations t projectID limit offset = unpickleMany t url xpIterations
-    where url = projectURL ++ "/" ++ projectID ++ "/iterations" ++ (limitAndOffset limit offset)
+paginatedIterations t projectID limit offset = unpickleWith t url xpIterations
+    where url = projectURL ++ "/" ++ projectID ++ "/iterations" ++
+                (limitAndOffset limit offset)
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o
@@ -93,53 +99,40 @@ limitAndOffset l o
     where offset | o <= 0 = ""
                  | otherwise = "&offset=" ++ show o
 
-tokenPost :: TokenSt -> String -> [String] -> IO String
-tokenPost t url ps = callRemote url opts
-    where opts = [ CurlHttpHeaders [ "X-TrackerToken: " ++ t
-                                   , "Content-type: application/xml"]
+pushEntity :: (XmlPickler a) => a -> PU a -> ([String] -> IO String) -> IO a
+pushEntity entity pickler webAction = runPickle pickler entity >>=
+                                      webAction >>=
+                                      runUnpickle pickler >>=
+                                      return . head
+
+unpickle :: (XmlPickler a) => String -> String -> IO a
+unpickle t url = unpickleWith t url xpickle
+
+unpickleWith :: (XmlPickler a) => String -> String -> PU a -> IO a
+unpickleWith t url xp = tokenGET t url >>= runUnpickle xp >>= return . head 
+
+tokenPOST :: TokenSt -> String -> [String] -> IO String
+tokenPOST t url ps = callRemote url opts
+    where opts = [ defaultHeaders t
                  , CurlPostFields ps
                  , CurlPost True
+                 , CurlVerbose True
                  ]
 
-tokenPut :: TokenSt -> String -> [String] -> IO String
-tokenPut t url ps = callRemote url opts
-    where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t
-                                   , "Content-type: application/xml"
+tokenPUT :: TokenSt -> String -> [String] -> IO String
+tokenPUT t url ps = callRemote url [ defaultHeaders t
+                                   , CurlCustomRequest "PUT"
+                                   , CurlPostFields ps
                                    ]
-                 , CurlCustomRequest "PUT"
-                 , CurlPostFields ps
-                 ]
 
-tokenDelete :: TokenSt -> String -> IO String
-tokenDelete t url = callRemote url opts
-    where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t]
-                 , CurlPost False
-                 , CurlCustomRequest "DELETE"
-                 ]
+tokenDELETE :: TokenSt -> String -> IO String
+tokenDELETE t url = callRemote url [ defaultHeaders t
+                                   , CurlPost False
+                                   , CurlCustomRequest "DELETE"
+                                   ]
 
-unpickleOne :: (XmlPickler a) => String -> String -> IO a
-unpickleOne t url = unpickleMany t url xpickle
-
-unpickleMany :: (XmlPickler a) => String -> String -> PU a -> IO a
-unpickleMany t url xp = tokenCall t url >>= runUnpickle xp >>= return . head 
-
-runUnpickle :: (XmlPickler a) => PU a -> String -> IO [a]
-runUnpickle xp xml = runX $ readString options xml >>> xunpickleVal xp
-    where options = [ (a_validate,v_0)
-		    , (a_remove_whitespace,v_1)
-                    -- , (a_trace,v_1)
-		    , (a_preserve_comment, v_0)
-		    ]
-
-runPickle :: (XmlPickler a) => PU a -> a -> IO [String]
-runPickle xp rec = runX $ constA rec >>>
-                          xpickleVal xp >>>
-                          writeDocumentToString []
-
-tokenCall :: TokenSt -> String -> IO String
-tokenCall t url = callRemote url opts
-    where opts = [CurlHttpHeaders ["X-TrackerToken: " ++ t,
-                                   "Content-type: application/xml"]]
+tokenGET :: TokenSt -> String -> IO String
+tokenGET t url = callRemote url [defaultHeaders t]
 
 callRemote :: String -> [CurlOption] -> IO String
 callRemote url opts = 
@@ -148,7 +141,12 @@ callRemote url opts =
           CurlOK -> return $ respBody response
           _      -> fail $ msg response 
     where getResponse :: IO (CurlResponse_ [(String, String)] String)
-          getResponse = curlGetResponse_ url opts -- >>= \r -> putStrLn (respBody r) >> return r
+          getResponse = curlGetResponse_ url opts
           msg r = url ++ "\n" ++ 
                   (show $ respStatus r) ++ respStatusLine r
+
+defaultHeaders :: TokenSt -> CurlOption
+defaultHeaders t = CurlHttpHeaders [ "X-TrackerToken: " ++ t
+                                   , "Content-type: application/xml"
+                                   ]
 

@@ -18,16 +18,16 @@ data Project =
 
 type Stories = [Story]
 data Story = 
-    Story { stID           :: String
-          , stType         :: String
-          , stURL          :: String
+    Story { stID           :: Maybe String
+          , stType         :: Maybe String
+          , stURL          :: Maybe String
           , stEstimate     :: Maybe String
-          , stCurrentState :: String
-          , stDescription  :: String
-          , stName         :: String
-          , stRequestedBy  :: String
+          , stCurrentState :: Maybe String
+          , stDescription  :: Maybe String
+          , stName         :: Maybe String
+          , stRequestedBy  :: Maybe String
           , stOwnedBy      :: Maybe String
-          , stCreatedAt    :: String
+          , stCreatedAt    :: Maybe String
           , stAcceptedAt   :: Maybe String
           , stIteration    :: Maybe Iteration
           , stLabels       :: Maybe String
@@ -35,16 +35,16 @@ data Story =
     deriving (Eq, Show)
 
 emptyStory :: Story
-emptyStory = Story { stID           = ""
-                   , stType         = ""
-                   , stURL          = ""
+emptyStory = Story { stID           = Nothing
+                   , stType         = Nothing
+                   , stURL          = Nothing
                    , stEstimate     = Nothing
-                   , stCurrentState = ""
-                   , stDescription  = ""
-                   , stName         = ""
-                   , stRequestedBy  = ""
+                   , stCurrentState = Nothing
+                   , stDescription  = Nothing
+                   , stName         = Nothing
+                   , stRequestedBy  = Nothing
                    , stOwnedBy      = Nothing
-                   , stCreatedAt    = ""
+                   , stCreatedAt    = Nothing
                    , stAcceptedAt   = Nothing
                    , stIteration    = Nothing
                    , stLabels       = Nothing

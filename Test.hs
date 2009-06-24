@@ -28,30 +28,24 @@ tests = [ testGroup "Story"
         ]
 
 test_story_unpickle = do
-  st <- runUnpickle storyXml xpStory
-  1 @=? (length st)
-  storyRecord @=? (head st)
+  [st] <- runUnpickle xpStory storyXml
+  storyRecord @=? st
 
 test_stories_unpickle = do
-  (stories:[]) <- runUnpickle (storiesXml 3) xpStories
-  3 @=? (length stories)
+  [stories] <- runUnpickle xpStories (storiesXml 3)
   (replicate 3 storyRecord) @=? stories
 
 test_project_unpickle = do
-  (project:[]) <- runUnpickle projectXml xpProject
+  [project] <- runUnpickle xpProject projectXml
   projectRecord @=? project
 
 test_projects_unpickle = do
-  (projects:[]) <- runUnpickle (projectsXml 3) xpProjects
-  3 @=? (length projects)
+  [projects] <- runUnpickle xpProjects (projectsXml 3)
   (replicate 3 projectRecord) @=? projects
 
 test_iterations_unpickle = do
-  (iterations:[]) <- runUnpickle (iterationsXml 2 3) xpIterations
+  [iterations] <- runUnpickle xpIterations (iterationsXml 2 3) 
   (replicate 2 $ iterationRecord 3) @=? iterations
-
-runUnpickle :: String -> PU a -> IO [a]
-runUnpickle xml pickler = runX $ readString [] xml >>> xunpickleVal pickler
 
 storyXml = "<story>\
         \<id type=\"integer\">804610</id>\
@@ -65,15 +59,15 @@ storyXml = "<story>\
         \<created_at type=\"datetime\">2009/06/14 14:08:45 GMT</created_at>\
       \</story>"
 
-storyRecord = emptyStory { stID           = "804610"
-                         , stType         = "feature"
-                         , stURL          = "http://www.pivotaltracker.com/story/show/804610"
+storyRecord = emptyStory { stID           = Just "804610"
+                         , stType         = Just "feature"
+                         , stURL          = Just "http://www.pivotaltracker.com/story/show/804610"
                          , stEstimate     = Just "2"
-                         , stCurrentState = "unstarted"
-                         , stDescription  = ""
-                         , stName         = "Add support for ssl or not"
-                         , stRequestedBy  = "Wilkes Joiner"
-                         , stCreatedAt    = "2009/06/14 14:08:45 GMT"
+                         , stCurrentState = Just "unstarted"
+                         , stDescription  = Just ""
+                         , stName         = Just "Add support for ssl or not"
+                         , stRequestedBy  = Just "Wilkes Joiner"
+                         , stCreatedAt    = Just "2009/06/14 14:08:45 GMT"
                          , stLabels       = Nothing
                          , stIteration    = Nothing
                          }
@@ -117,4 +111,3 @@ iterationRecord m = emptyIteration { itrID            = Just "1"
                                    , itrEndDate       = "2009/06/21 00:00:00 UTC"
                                    , itrStories       = replicate m storyRecord
                                    }
-
