@@ -19,6 +19,8 @@ import Text.XML.HXT.Arrow.Pickle
 import Network.Curl
 import Network.URI
 
+import Data.Word
+
 import Tracker.Types
 import Tracker.Pickle
 
@@ -59,6 +61,13 @@ deleteStory :: TokenSt -> ProjectID -> StoryID -> IO Story
 deleteStory t projectID storyID = tokenDelete t url >>= runUnpickle xpickle >>= return . head
     where url = (storiesURL projectID) ++ "/" ++ storyID
 
+updateStory :: TokenSt -> ProjectID -> Story -> IO Story
+updateStory t pid st = runPickle xpStory st >>=
+                       tokenPut t url >>=
+                       runUnpickle xpStory >>=
+                       return . head
+    where url = (storiesURL pid) ++ "/" ++ (stID st)
+
 search :: TokenSt -> ProjectID -> String -> IO [Story]
 search t projectID qstring = unpickleMany t url xpStories
     where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
@@ -87,10 +96,20 @@ limitAndOffset l o
 
 tokenPost :: TokenSt -> String -> [String] -> IO String
 tokenPost t url ps = callRemote url opts
-    where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t,
-                                    "Content-type: application/xml"]
+    where opts = [ CurlHttpHeaders [ "X-TrackerToken: " ++ t
+                                   , "Content-type: application/xml"]
                  , CurlPostFields ps
-                 , CurlPost True]
+                 , CurlPost True
+                 ]
+
+tokenPut :: TokenSt -> String -> [String] -> IO String
+tokenPut t url ps = callRemote url opts
+    where opts = [ CurlHttpHeaders ["X-TrackerToken: " ++ t
+                                   , "Content-type: application/xml"
+                                   ]
+                 , CurlCustomRequest "PUT"
+                 , CurlPostFields ps
+                 ]
 
 tokenDelete :: TokenSt -> String -> IO String
 tokenDelete t url = callRemote url opts
@@ -112,6 +131,11 @@ runUnpickle xp xml = runX $ readString options xml >>> xunpickleVal xp
                     -- , (a_trace,v_1)
 		    , (a_preserve_comment, v_0)
 		    ]
+
+runPickle :: (XmlPickler a) => PU a -> a -> IO [String]
+runPickle xp rec = runX $ constA rec >>>
+                          xpickleVal xp >>>
+                          writeDocumentToString []
 
 tokenCall :: TokenSt -> String -> IO String
 tokenCall t url = callRemote url opts
