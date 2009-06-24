@@ -66,6 +66,9 @@ story :: TokenSt -> ProjectID -> StoryID -> IO Story
 story t pid sid = unpickle t url 
     where url = (storiesURL pid) ++ "/" ++ sid
 
+filterStories :: TokenSt -> ProjectID -> SearchTerm -> IO [Story]
+filterStories t pid term = search t pid $ show term
+
 search :: TokenSt -> ProjectID -> String -> IO [Story]
 search t pid qstring = unpickleWith t url xpStories
     where url = (storiesURL pid) ++ "?filter=" ++ escapedQuery
