@@ -32,6 +32,7 @@ runCmd cp "stories"   [pid,limit,offset] = putStories    =<< stories  (getToken 
 runCmd cp "search"    (pid:rest)         = putStories    =<< search   (getToken cp) pid (intercalate " " rest)
 runCmd cp "add"       (pid:rest)         = putStory      =<< addStory (getToken cp) pid (intercalate " " rest)
 runCmd cp "comment"   (pid:sid:rest)     = putNote       =<< addComment (getToken cp) pid sid (intercalate " " rest)
+runCmd cp "deliver"   [pid]              = putStories    =<< deliverAllFinished (getToken cp) pid
 runCmd cp "done"      [pid]              = putIterations =<< iterations (getToken cp) pid "done"
 runCmd cp "current"   [pid]              = putIterations =<< iterations (getToken cp) pid "current"
 runCmd cp "backlog"   [pid]              = putIterations =<< iterations (getToken cp) pid "backlog"
@@ -64,6 +65,7 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh delete PROJECT_ID STORY_ID\n\
                       \trackerh add PROJECT_ID TITLE\n\
                       \trackerh comment PROJECT_ID STORY_ID COMMENT\n\
+                      \trackerh deliver PROJECT_ID\n\
                       \trackerh done PROJECT_ID\n\
                       \trackerh current PROJECT_ID\n\
                       \trackerh backlog PROJECT_ID\n\

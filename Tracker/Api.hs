@@ -10,6 +10,7 @@ module Tracker.Api
     , deleteStory
     , updateStory
     , addComment
+    , deliverAllFinished
     , iterations
     , paginatedIterations
     )
@@ -49,6 +50,10 @@ projects t = unpickleWith t projectURL xpProjects
 
 project :: TokenSt -> ProjectID -> IO Project
 project t pid = unpickle t $ projectURL ++ "/" ++ pid
+
+deliverAllFinished :: TokenSt -> ProjectID -> IO Stories
+deliverAllFinished t pid = tokenPUT t url [] >>= runUnpickle xpStories >>= return . head
+    where url = (storiesURL pid) ++ "/deliver_all_finished"
 
 
 stories :: TokenSt -> ProjectID -> Int -> Int -> IO Stories
