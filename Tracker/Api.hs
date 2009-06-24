@@ -52,7 +52,7 @@ project :: TokenSt -> ProjectID -> IO Project
 project t pid = unpickle t $ projectURL ++ "/" ++ pid
 
 deliverAllFinished :: TokenSt -> ProjectID -> IO Stories
-deliverAllFinished t pid = tokenPUT t url [] >>= runUnpickle xpStories >>= return . head
+deliverAllFinished t pid = unpickleRequest xpStories $ tokenPUT t url []
     where url = (storiesURL pid) ++ "/deliver_all_finished"
 
 
@@ -83,9 +83,7 @@ updateStory t pid st = pushEntity st xpStory (tokenPUT t url)
                    Just x  -> x
 
 deleteStory :: TokenSt -> ProjectID -> StoryID -> IO Story
-deleteStory t pid sid = tokenDELETE t url >>=
-                                  runUnpickle xpickle >>=
-                                  return . head
+deleteStory t pid sid = unpickleRequest xpickle (tokenDELETE t url)
     where url = (storiesURL pid) ++ "/" ++ sid
 
 
@@ -111,16 +109,16 @@ limitAndOffset l o
                  | otherwise = "&offset=" ++ show o
 
 pushEntity :: (XmlPickler a) => a -> PU a -> ([String] -> IO String) -> IO a
-pushEntity entity pickler webAction = runPickle pickler entity >>=
-                                      webAction >>=
-                                      runUnpickle pickler >>=
-                                      return . head
+pushEntity entity pickler webAction = runPickle pickler entity >>= (unpickleRequest pickler) . webAction
 
 unpickle :: (XmlPickler a) => String -> String -> IO a
 unpickle t url = unpickleWith t url xpickle
 
 unpickleWith :: (XmlPickler a) => String -> String -> PU a -> IO a
-unpickleWith t url xp = tokenGET t url >>= runUnpickle xp >>= return . head 
+unpickleWith t url xp = unpickleRequest xp (tokenGET t url)
+
+unpickleRequest :: (XmlPickler a) => PU a -> IO String -> IO a
+unpickleRequest pickler webAction = webAction >>= runUnpickle pickler >>= return . head
 
 tokenPOST :: TokenSt -> String -> [String] -> IO String
 tokenPOST t url ps = callRemote url opts
