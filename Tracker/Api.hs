@@ -1,5 +1,6 @@
 module Tracker.Api
     ( module Tracker.Types
+    , module Tracker.Filter
     , token
     , project
     , projects
@@ -23,6 +24,7 @@ import Network.URI
 
 import Tracker.Types
 import Tracker.Pickle
+import Tracker.Filter
 
 type TokenSt   = String
 type ProjectID = String
