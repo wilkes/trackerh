@@ -8,6 +8,7 @@ module Tracker.Api
     , search
     , addStory
     , deleteStory
+    , updateStory
     , iterations
     , paginatedIterations
     )
@@ -18,8 +19,6 @@ import Text.XML.HXT.Arrow.Pickle
 
 import Network.Curl
 import Network.URI
-
-import Data.Word
 
 import Tracker.Types
 import Tracker.Pickle
