@@ -69,3 +69,16 @@ emptyIteration =
               , itrStories   = []
               }
 
+data Note = Note { ntID      :: Maybe String
+                 , ntText    :: String
+                 , ntAuthor  :: Maybe String
+                 , ntNotedAt :: Maybe String
+                 }          
+          deriving (Eq, Show)
+
+emptyNote :: Note
+emptyNote = Note { ntID      = Nothing
+                 , ntText    = ""
+                 , ntAuthor  = Nothing
+                 , ntNotedAt = Nothing
+                 }          

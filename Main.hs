@@ -25,12 +25,13 @@ runCmd :: ConfigParser -> String -> [String] -> IO ()
 runCmd _  "token"     [uid, pwd]         = putStrLn      =<< token uid pwd
 runCmd cp "project"   [pid]              = putProject    =<< project  (getToken cp) pid
 runCmd cp "projects"  _                  = putProjects   =<< projects (getToken cp)
-runCmd cp "story"     [pid, storyID]     = putStory      =<< story    (getToken cp) pid storyID
-runCmd cp "delete"    [pid, storyID]     = putStory      =<< deleteStory (getToken cp) pid storyID
+runCmd cp "story"     [pid, sid]         = putStory      =<< story    (getToken cp) pid sid
+runCmd cp "delete"    [pid, sid]         = putStory      =<< deleteStory (getToken cp) pid sid
 runCmd cp "stories"   [pid]              = putStories    =<< stories  (getToken cp) pid 0 0
 runCmd cp "stories"   [pid,limit,offset] = putStories    =<< stories  (getToken cp) pid (read limit) (read offset)
 runCmd cp "search"    (pid:rest)         = putStories    =<< search   (getToken cp) pid (intercalate " " rest)
 runCmd cp "add"       (pid:rest)         = putStory      =<< addStory (getToken cp) pid (intercalate " " rest)
+runCmd cp "comment"   (pid:sid:rest)     = putNote       =<< addComment (getToken cp) pid sid (intercalate " " rest)
 runCmd cp "done"      [pid]              = putIterations =<< iterations (getToken cp) pid "done"
 runCmd cp "current"   [pid]              = putIterations =<< iterations (getToken cp) pid "current"
 runCmd cp "backlog"   [pid]              = putIterations =<< iterations (getToken cp) pid "backlog"
@@ -62,6 +63,7 @@ printUsage = putStrLn "Usage: trackerh command [args]\n\
                       \trackerh story PROJECT_ID STORY_ID\n\
                       \trackerh delete PROJECT_ID STORY_ID\n\
                       \trackerh add PROJECT_ID TITLE\n\
+                      \trackerh comment PROJECT_ID STORY_ID COMMENT\n\
                       \trackerh done PROJECT_ID\n\
                       \trackerh current PROJECT_ID\n\
                       \trackerh backlog PROJECT_ID\n\
@@ -102,14 +104,22 @@ putStories :: [Story] -> IO ()
 putStories = putItems putStory
 
 putStory :: Story -> IO ()
-putStory = putItem [(show . stName          ,"Name"),
-                    (show . stID            ,"ID"),
-                    (show . stType          ,"Type"),
-                    (show . stURL           ,"URL"),
-                    (show . stEstimate      ,"Estimate"),
-                    (show . stCurrentState  ,"Status"),
-                    (show . stRequestedBy   ,"Requestor"),
-                    (show . stCreatedAt     ,"Created"),
-                    (show . stLabels        ,"Labels"),
-                    (show . stDescription   ,"Description")]
+putStory = putItem [ (show . stName          ,"Name")
+                   , (show . stID            ,"ID")
+                   , (show . stType          ,"Type")
+                   , (show . stURL           ,"URL")
+                   , (show . stEstimate      ,"Estimate")
+                   , (show . stCurrentState  ,"Status")
+                   , (show . stRequestedBy   ,"Requestor")
+                   , (show . stCreatedAt     ,"Created")
+                   , (show . stLabels        ,"Labels")
+                   , (show . stDescription   ,"Description")
+                   ]
 
+
+putNote :: Note -> IO ()
+putNote = putItem [ (show . ntID     , "ID")
+                  , (show . ntText   , "Text")
+                  , (show . ntAuthor , "Author")
+                  , (show . ntNotedAt, "Noted At")
+                  ]

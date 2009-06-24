@@ -9,6 +9,7 @@ module Tracker.Api
     , addStory
     , deleteStory
     , updateStory
+    , addComment
     , iterations
     , paginatedIterations
     )
@@ -47,27 +48,27 @@ projects :: TokenSt -> IO Projects
 projects t = unpickleWith t projectURL xpProjects
 
 project :: TokenSt -> ProjectID -> IO Project
-project t projectID = unpickle t $ projectURL ++ "/" ++ projectID
+project t pid = unpickle t $ projectURL ++ "/" ++ pid
 
 
 stories :: TokenSt -> ProjectID -> Int -> Int -> IO Stories
-stories t projectID limit offset = unpickleWith t url xpStories
-    where url = (storiesURL projectID) ++ (limitAndOffset limit offset)
+stories t pid limit offset = unpickleWith t url xpStories
+    where url = (storiesURL pid) ++ (limitAndOffset limit offset)
 
 story :: TokenSt -> ProjectID -> StoryID -> IO Story
-story t projectID storyID = unpickle t url 
-    where url = (storiesURL projectID) ++ "/" ++ storyID
+story t pid sid = unpickle t url 
+    where url = (storiesURL pid) ++ "/" ++ sid
 
 search :: TokenSt -> ProjectID -> String -> IO [Story]
-search t projectID qstring = unpickleWith t url xpStories
-    where url = (storiesURL projectID) ++ "?filter=" ++ escapedQuery
+search t pid qstring = unpickleWith t url xpStories
+    where url = (storiesURL pid) ++ "?filter=" ++ escapedQuery
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
 addStory :: TokenSt -> ProjectID -> String -> IO Story
-addStory t projectID title = createStory t projectID $ emptyStory {stName = Just title}
+addStory t pid title = createStory t pid $ emptyStory {stName = Just title}
 
 createStory :: TokenSt -> ProjectID -> Story -> IO Story
-createStory t projectID st = pushEntity st xpStory (tokenPOST t (storiesURL projectID))
+createStory t pid st = pushEntity st xpStory (tokenPOST t (storiesURL pid))
 
 updateStory :: TokenSt -> ProjectID -> Story -> IO Story
 updateStory t pid st = pushEntity st xpStory (tokenPUT t url)
@@ -77,19 +78,24 @@ updateStory t pid st = pushEntity st xpStory (tokenPUT t url)
                    Just x  -> x
 
 deleteStory :: TokenSt -> ProjectID -> StoryID -> IO Story
-deleteStory t projectID storyID = tokenDELETE t url >>=
+deleteStory t pid sid = tokenDELETE t url >>=
                                   runUnpickle xpickle >>=
                                   return . head
-    where url = (storiesURL projectID) ++ "/" ++ storyID
+    where url = (storiesURL pid) ++ "/" ++ sid
 
+
+addComment :: TokenSt -> ProjectID -> StoryID -> String -> IO Note
+addComment t pid sid txt = pushEntity n xpNote (tokenPOST t url)
+    where n = emptyNote {ntText = txt}
+          url = (storiesURL pid) ++ "/" ++ sid ++ "/notes"
 
 iterations :: TokenSt -> ProjectID -> String -> IO [Iteration]
-iterations t projectID gname = unpickleWith t url xpIterations
-    where url = projectURL ++ "/" ++ projectID ++ "/iterations/" ++ gname
+iterations t pid gname = unpickleWith t url xpIterations
+    where url = projectURL ++ "/" ++ pid ++ "/iterations/" ++ gname
 
 paginatedIterations :: TokenSt -> ProjectID -> Int -> Int -> IO [Iteration]
-paginatedIterations t projectID limit offset = unpickleWith t url xpIterations
-    where url = projectURL ++ "/" ++ projectID ++ "/iterations" ++
+paginatedIterations t pid limit offset = unpickleWith t url xpIterations
+    where url = projectURL ++ "/" ++ pid ++ "/iterations" ++
                 (limitAndOffset limit offset)
 
 limitAndOffset :: Int -> Int -> String
@@ -116,7 +122,6 @@ tokenPOST t url ps = callRemote url opts
     where opts = [ defaultHeaders t
                  , CurlPostFields ps
                  , CurlPost True
-                 , CurlVerbose True
                  ]
 
 tokenPUT :: TokenSt -> String -> [String] -> IO String

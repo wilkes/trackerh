@@ -16,6 +16,9 @@ instance XmlPickler Iteration where
 instance XmlPickler Token where
     xpickle = xpToken
 
+instance XmlPickler Note where
+    xpickle = xpNote
+
 xpToken :: PU Token
 xpToken = xpElem "token" $
           xpWrap ( uncurry Token
@@ -98,6 +101,16 @@ xpIteration = xpElem "iteration" $
                        (xpElVal "start")
                        (xpElVal "finish")
                        xpStories
+
+xpNote :: PU Note
+xpNote = xpElem "note" $
+         xpWrap ( \(a,b,c,d) -> Note a b c d
+                , \n -> (ntID n, ntText n, ntAuthor n, ntNotedAt n)
+                ) $
+         xp4Tuple (xpOption (xpElVal "id"))
+                  (xpElVal "text")
+                  (xpOption (xpElVal "author"))
+                  (xpOption (xpElVal "noted_at"))
 
 xpElVal :: String -> PU String
 xpElVal t = xpElem t xpText0

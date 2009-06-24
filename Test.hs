@@ -17,6 +17,7 @@ main = defaultMain tests
 tests = [ testGroup "Story"
           [ testCase "test_story_unpickle" test_story_unpickle
           , testCase "test_stories_unpickle" test_stories_unpickle
+          , testCase "test_note_unpickle" test_note_unpickle
           ]
         , testGroup "Project"
           [ testCase "test_project_unpickle" test_project_unpickle
@@ -35,6 +36,11 @@ test_stories_unpickle = do
   [stories] <- runUnpickle xpStories (storiesXml 3)
   (replicate 3 storyRecord) @=? stories
 
+
+test_note_unpickle = do 
+  [note] <- runUnpickle xpNote noteXml
+  noteRecord @=? note
+             
 test_project_unpickle = do
   [project] <- runUnpickle xpProject projectXml
   projectRecord @=? project
@@ -111,3 +117,17 @@ iterationRecord m = emptyIteration { itrID            = Just "1"
                                    , itrEndDate       = "2009/06/21 00:00:00 UTC"
                                    , itrStories       = replicate m storyRecord
                                    }
+
+noteXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+    \<note>\
+    \  <id type=\"integer\">1</id>\
+    \  <text>new note via API</text>\
+    \  <author>Spock (young)</author>\
+    \  <noted_at type=\"datetime\">2009/01/16 18:53:51 UTC</noted_at>\
+    \</note>"
+
+noteRecord = Note { ntID = Just "1"
+                  , ntText = "new note via API"
+                  , ntAuthor = Just "Spock (young)"
+                  , ntNotedAt = Just "2009/01/16 18:53:51 UTC"
+                  }
