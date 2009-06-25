@@ -7,6 +7,7 @@ module Tracker.Api
     , story
     , stories
     , search
+    , filterStories
     , addStory
     , deleteStory
     , updateStory
@@ -57,7 +58,6 @@ deliverAllFinished :: TokenSt -> ProjectID -> IO Stories
 deliverAllFinished t pid = unpickleRequest xpStories $ tokenPUT t url []
     where url = (storiesURL pid) ++ "/deliver_all_finished"
 
-
 stories :: TokenSt -> ProjectID -> Int -> Int -> IO Stories
 stories t pid limit offset = unpickleWith t url xpStories
     where url = (storiesURL pid) ++ (limitAndOffset limit offset)
@@ -100,7 +100,7 @@ addComment t pid sid txt = pushEntity n xpNote (tokenPOST t url)
 iterations :: TokenSt -> ProjectID -> String -> IO [Iteration]
 iterations t pid gname = unpickleWith t url xpIterations
     where url = projectURL ++ "/" ++ pid ++ "/iterations/" ++ gname
-
+ 
 paginatedIterations :: TokenSt -> ProjectID -> Int -> Int -> IO [Iteration]
 paginatedIterations t pid limit offset = unpickleWith t url xpIterations
     where url = projectURL ++ "/" ++ pid ++ "/iterations" ++
@@ -147,6 +147,11 @@ tokenDELETE t url = callRemote url [ defaultHeaders t
 tokenGET :: TokenSt -> String -> IO String
 tokenGET t url = callRemote url [defaultHeaders t]
 
+defaultHeaders :: TokenSt -> CurlOption
+defaultHeaders t = CurlHttpHeaders [ "X-TrackerToken: " ++ t
+                                   , "Content-type: application/xml"
+                                   ]
+
 callRemote :: String -> [CurlOption] -> IO String
 callRemote url opts = 
     getResponse >>= \response ->
@@ -157,9 +162,3 @@ callRemote url opts =
           getResponse = curlGetResponse_ url opts
           msg r = url ++ "\n" ++ 
                   (show $ respStatus r) ++ respStatusLine r
-
-defaultHeaders :: TokenSt -> CurlOption
-defaultHeaders t = CurlHttpHeaders [ "X-TrackerToken: " ++ t
-                                   , "Content-type: application/xml"
-                                   ]
-

@@ -44,3 +44,4 @@ quote :: String -> String
 quote s
     | any (== ' ') s = "\"" ++ s ++ "\""
     | otherwise      = s
+

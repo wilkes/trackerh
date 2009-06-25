@@ -9,7 +9,8 @@ Library
                , HaXml < 1.19
                , hxt
                , network
-  Exposed-Modules: Tracker.Api
+               , mtl
+  Exposed-Modules: Tracker.Api, Tracker.ApiM
   GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans -fforce-recomp
 
 Executable trackerh

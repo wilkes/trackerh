@@ -23,13 +23,14 @@ main = do
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
 runCmd _  "token"     [uid, pwd]         = putStrLn      =<< token uid pwd
-runCmd cp "project"   [pid]              = putProject    =<< project  (getToken cp) pid
 runCmd cp "projects"  _                  = putProjects   =<< projects (getToken cp)
-runCmd cp "story"     [pid, sid]         = putStory      =<< story    (getToken cp) pid sid
-runCmd cp "delete"    [pid, sid]         = putStory      =<< deleteStory (getToken cp) pid sid
+runCmd cp "project"   [pid]              = putProject    =<< project  (getToken cp) pid
 runCmd cp "stories"   [pid]              = putStories    =<< stories  (getToken cp) pid 0 0
 runCmd cp "stories"   [pid,limit,offset] = putStories    =<< stories  (getToken cp) pid (read limit) (read offset)
 runCmd cp "search"    (pid:rest)         = putStories    =<< search   (getToken cp) pid (intercalate " " rest)
+runCmd cp "mywork"    [pid,user]         = putStories =<< filterStories (getToken cp) pid (MyWork user)
+runCmd cp "story"     [pid, sid]         = putStory      =<< story    (getToken cp) pid sid
+runCmd cp "delete"    [pid, sid]         = putStory      =<< deleteStory (getToken cp) pid sid
 runCmd cp "add"       (pid:rest)         = putStory      =<< addStory (getToken cp) pid (intercalate " " rest)
 runCmd cp "comment"   (pid:sid:rest)     = putNote       =<< addComment (getToken cp) pid sid (intercalate " " rest)
 runCmd cp "deliver"   [pid]              = putStories    =<< deliverAllFinished (getToken cp) pid
@@ -39,6 +40,27 @@ runCmd cp "backlog"   [pid]              = putIterations =<< iterations (getToke
 runCmd cp "iterations"[pid]              = putIterations =<< iterations (getToken cp) pid ""
 runCmd cp "iterations"[pid,limit,offset] = putIterations =<< paginatedIterations (getToken cp) pid (read limit) (read offset)
 runCmd _  _           _                  = printUsage
+
+printUsage :: IO ()
+printUsage = putStrLn "Usage: trackerh command [args]\n\
+                      \trackerh token username password\n\
+                      \trackerh projects\n\
+                      \trackerh project PROJECT_ID\n\
+                      \trackerh stories PROJECT_ID\n\
+                      \trackerh stories PROJECT_ID LIMIT OFFSET\n\
+                      \trackerh search PROJECT_ID QUERY\n\
+                      \trackerh mywork PROJECT_ID USER\n\
+                      \trackerh story PROJECT_ID STORY_ID\n\
+                      \trackerh delete PROJECT_ID STORY_ID\n\
+                      \trackerh add PROJECT_ID TITLE\n\
+                      \trackerh comment PROJECT_ID STORY_ID COMMENT\n\
+                      \trackerh deliver PROJECT_ID\n\
+                      \trackerh done PROJECT_ID\n\
+                      \trackerh current PROJECT_ID\n\
+                      \trackerh backlog PROJECT_ID\n\
+                      \trackerh iterations PROJECT_ID\n\
+                      \trackerh iterations PROJECT_ID LIMIT OFFSET\n\
+                      \\n"
 
 loadCP :: Maybe FilePath -> IO ConfigParser
 loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
@@ -53,25 +75,6 @@ forceGet k cp = forceEither $ get cp "" k
 
 getToken :: ConfigParser -> String
 getToken    = forceGet "token"
-
-printUsage :: IO ()
-printUsage = putStrLn "Usage: trackerh command [args]\n\
-                      \trackerh token username password\n\
-                      \trackerh projects\n\
-                      \trackerh project PROJECT_ID\n\
-                      \trackerh stories PROJECT_ID\n\
-                      \trackerh stories PROJECT_ID LIMIT OFFSET\n\
-                      \trackerh story PROJECT_ID STORY_ID\n\
-                      \trackerh delete PROJECT_ID STORY_ID\n\
-                      \trackerh add PROJECT_ID TITLE\n\
-                      \trackerh comment PROJECT_ID STORY_ID COMMENT\n\
-                      \trackerh deliver PROJECT_ID\n\
-                      \trackerh done PROJECT_ID\n\
-                      \trackerh current PROJECT_ID\n\
-                      \trackerh backlog PROJECT_ID\n\
-                      \trackerh iterations PROJECT_ID\n\
-                      \trackerh iterations PROJECT_ID LIMIT OFFSET\n\
-                      \\n"
 
 putItems :: (a -> IO ()) -> [a] -> IO ()
 putItems putFunction i = mapM_ (\s -> putStrLn "" >> putFunction s) i
