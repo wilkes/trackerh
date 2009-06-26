@@ -1,11 +1,22 @@
 module Tracker.ApiM where
 
 import Network.URI
+import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
 import Tracker.Context
 import Tracker.Types
 import Tracker.Pickle
 import Tracker.Filter
+
+token :: String -> String -> IO String
+token username password = callRemote url opts >>=
+                          runUnpickle xpToken >>=
+                          return . tkGuid . head
+    where url = "https://www.pivotaltracker.com/services/tokens/active"
+          opts = [CurlUserPwd $ username ++ ":" ++ password]
+
+projects :: ProjectM Projects
+projects = unpickleWithM xpProjects projectURL
 
 project :: ProjectM Project
 project = unpickleM =<< projectURLM

@@ -22,6 +22,15 @@ Executable trackerh
   Other-Modules: Tracker.Api
   GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans  -fforce-recomp
 
+Executable trackerhM
+  Main-Is: MainMonadic.hs
+  Build-Depends: base
+               , ConfigFile
+               , MissingH
+               , directory
+  Other-Modules: Tracker.ApiM
+  GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans  -fforce-recomp
+
 Executable trackerh-test
   Main-Is: Test.hs
   Build-Depends: base

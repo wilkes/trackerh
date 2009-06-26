@@ -11,6 +11,9 @@ data Config = Config {cfgToken :: String, cfgProjectID :: String }
 
 type ProjectM = ReaderT Config IO
 
+runProjectM :: ProjectM a -> String -> String -> IO a
+runProjectM f token pid = runReaderT f (Config token pid)
+
 serviceURL :: String
 serviceURL = "https://www.pivotaltracker.com/services/v2/"
 
