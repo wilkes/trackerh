@@ -3,72 +3,73 @@ module Tracker.ApiM where
 import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
+
 import Tracker.Context
 import Tracker.Types
 import Tracker.Pickle
 import Tracker.Filter
 
-token :: String -> String -> IO String
-token username password = callRemote url opts >>=
+getToken :: String -> String -> IO String
+getToken username password = callRemote url opts >>=
                           runUnpickle xpToken >>=
                           return . tkGuid . head
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
-projects :: ProjectM Projects
-projects = unpickleWithM xpProjects projectURL
+getProjects :: ProjectM Projects
+getProjects = projectURL >>= unpickleWith xpProjects
 
-project :: ProjectM Project
-project = unpickleM =<< projectURLM
+getProject :: ProjectM Project
+getProject = projectURL >>= unpickle
 
 deliverAllFinished :: ProjectM Stories
-deliverAllFinished = url >>= tokenPUTM [] >>= unpickleResponseM xpStories
-    where url = storiesURLM <++> "/deliver_all_finished"
+deliverAllFinished = url >>= tokenPUT [] >>= unpickleResponse xpStories
+    where url = storiesURL <++> "/deliver_all_finished"
 
-stories :: Int -> Int -> ProjectM Stories
-stories limit offset = url >>= unpickleWithM xpStories
-    where url = storiesURLM <++> (limitAndOffset limit offset)
+getStories :: Int -> Int -> ProjectM Stories
+getStories limit offset = url >>= unpickleWith xpStories
+    where url = storiesURL <++> (limitAndOffset limit offset)
 
-story :: String -> ProjectM Story
-story sid = url >>= unpickleM 
-    where url = storiesURLM <++> ("/" ++ sid)
+getStory :: String -> ProjectM Story
+getStory sid = url >>= unpickle 
+    where url = storiesURL <++> ("/" ++ sid)
 
 filterStories :: SearchTerm -> ProjectM [Story]
 filterStories = search . show
 
 search :: String -> ProjectM [Story]
-search qstring = url >>= unpickleWithM xpStories
-    where url = storiesURLM <++> ("?filter=" ++ escapedQuery)
+search qstring = url >>= unpickleWith xpStories
+    where url = storiesURL <++> ("?filter=" ++ escapedQuery)
           escapedQuery = escapeURIString isUnescapedInURI qstring
 
 addStory :: String -> ProjectM Story
 addStory title = createStory $ emptyStory {stName = Just title}
 
 createStory :: Story -> ProjectM Story
-createStory st = storiesURLM >>= pushEntityM st xpStory tokenPOSTM
+createStory st = storiesURL >>= pushEntity st xpStory tokenPOST
 
 updateStory :: Story -> ProjectM Story
-updateStory st = url >>= pushEntityM st xpStory tokenPUTM
-      where url = storiesURLM <++> ("/" ++ stid)
+updateStory st = url >>= pushEntity st xpStory tokenPUT
+      where url = storiesURL <++> ("/" ++ stid)
             stid = case (stID st) of
                      Nothing -> ""
                      Just x  -> x
 
 deleteStory :: String -> ProjectM Story
-deleteStory sid = storiesURLM <++> ("/" ++ sid) >>= tokenDELETEM >>= unpickleResponseM xpickle
+deleteStory sid = storiesURL <++> ("/" ++ sid) >>= tokenDELETE >>= unpickleResponse xpickle
 
 addComment :: String -> String -> ProjectM Note
-addComment sid txt = url >>= pushEntityM n xpNote tokenPOSTM
-    where url = storiesURLM <++> ("/" ++ sid ++ "/notes")
+addComment sid txt = url >>= pushEntity n xpNote tokenPOST
+    where url = storiesURL <++> ("/" ++ sid ++ "/notes")
           n = emptyNote {ntText = txt}
 
-iterations :: String -> ProjectM [Iteration]
-iterations gname = url >>= unpickleWithM xpIterations
-    where url = projectURLM <++> ("/iterations/" ++ gname) 
+getIterations :: String -> ProjectM [Iteration]
+getIterations gname = url >>= unpickleWith xpIterations
+    where url = projectURL <++> ("/iterations/" ++ gname) 
 
-paginatedIterations :: Int -> Int -> ProjectM [Iteration]
-paginatedIterations limit offset = url >>= unpickleWithM xpIterations
-    where url = projectURLM <++> ("/iterations" ++ (limitAndOffset limit offset))
+getPagedIterations :: Int -> Int -> ProjectM [Iteration]
+getPagedIterations limit offset = url >>= unpickleWith xpIterations
+    where url = projectURL <++> ("/iterations" ++ (limitAndOffset limit offset))
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o

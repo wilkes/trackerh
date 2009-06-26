@@ -25,27 +25,27 @@ main = do
       o = [Option "c" ["config"] (ReqArg (stdRequired "c") "FILE") "Specify config"]
 
 runCmd :: ConfigParser -> String -> [String] -> IO ()
-runCmd _  "token"     [uid, pwd]     = putStrLn =<< token uid pwd
-runCmd cp "projects"  _              = runP projects                                putProjects   (getToken cp) ""
-runCmd cp "project"   [pid]          = runP project                                 putProject    (getToken cp) pid
-runCmd cp "stories"   [pid]          = runP (stories 0 0)                           putStories    (getToken cp) pid 
-runCmd cp "stories"   [pid,l,o]      = runP (stories (read l) (read o))             putStories    (getToken cp) pid 
-runCmd cp "search"    (pid:rest)     = runP (search (intercalate " " rest))         putStories    (getToken cp) pid 
-runCmd cp "mywork"    [pid,user]     = runP (filterStories (MyWork user))           putStories    (getToken cp) pid
-runCmd cp "story"     [pid, sid]     = runP (story sid)                             putStory      (getToken cp) pid 
-runCmd cp "delete"    [pid, sid]     = runP (deleteStory sid)                       putStory      (getToken cp) pid 
-runCmd cp "add"       (pid:rest)     = runP (addStory (intercalate " " rest))       putStory      (getToken cp) pid 
-runCmd cp "comment"   (pid:sid:rest) = runP (addComment sid (intercalate " " rest)) putNote       (getToken cp) pid
-runCmd cp "deliver"   [pid]          = runP deliverAllFinished                      putStories    (getToken cp) pid
-runCmd cp "done"      [pid]          = runP (iterations  "done")                    putIterations (getToken cp) pid 
-runCmd cp "current"   [pid]          = runP (iterations  "current")                 putIterations (getToken cp) pid
-runCmd cp "backlog"   [pid]          = runP (iterations  "backlog")                 putIterations (getToken cp) pid
-runCmd cp "iterations"[pid]          = runP (iterations  "")                        putIterations (getToken cp) pid
-runCmd cp "iterations"[pid,l,o]      = runP (paginatedIterations (read l) (read o)) putIterations (getToken cp) pid 
+runCmd _  "token"     [uid, pwd]     = putStrLn =<< getToken uid pwd
+runCmd cp "projects"  _              = runP getProjects                             putProjects   (cpToken cp) ""
+runCmd cp "project"   [pid]          = runP getProject                              putProject    (cpToken cp) pid
+runCmd cp "stories"   [pid]          = runP (getStories 0 0)                        putStories    (cpToken cp) pid 
+runCmd cp "stories"   [pid,l,o]      = runP (getStories (read l) (read o))          putStories    (cpToken cp) pid 
+runCmd cp "search"    (pid:rest)     = runP (search (intercalate " " rest))         putStories    (cpToken cp) pid 
+runCmd cp "mywork"    [pid,user]     = runP (filterStories (MyWork user))           putStories    (cpToken cp) pid
+runCmd cp "story"     [pid, sid]     = runP (getStory sid)                          putStory      (cpToken cp) pid 
+runCmd cp "delete"    [pid, sid]     = runP (deleteStory sid)                       putStory      (cpToken cp) pid 
+runCmd cp "add"       (pid:rest)     = runP (addStory (intercalate " " rest))       putStory      (cpToken cp) pid 
+runCmd cp "comment"   (pid:sid:rest) = runP (addComment sid (intercalate " " rest)) putNote       (cpToken cp) pid
+runCmd cp "deliver"   [pid]          = runP deliverAllFinished                      putStories    (cpToken cp) pid
+runCmd cp "done"      [pid]          = runP (getIterations "done")                  putIterations (cpToken cp) pid 
+runCmd cp "current"   [pid]          = runP (getIterations "current")               putIterations (cpToken cp) pid
+runCmd cp "backlog"   [pid]          = runP (getIterations "backlog")               putIterations (cpToken cp) pid
+runCmd cp "iterations"[pid]          = runP (getIterations "")                      putIterations (cpToken cp) pid
+runCmd cp "iterations"[pid,l,o]      = runP (getPagedIterations (read l) (read o))  putIterations (cpToken cp) pid 
 runCmd _  _           _              = printUsage
 
 runP :: ProjectM a -> (a -> IO ()) -> String -> String -> IO ()
-runP cmd io tk pid = io =<< runProjectM cmd tk pid
+runP cmd io tk pid = runProjectM cmd tk pid >>= io
 
 printUsage :: IO ()
 printUsage = putStrLn "Usage: trackerh command [args]\n\
@@ -79,8 +79,8 @@ loadConfig fp = readfile emptyCP fp >>= return . forceEither
 forceGet :: String -> ConfigParser -> String
 forceGet k cp = forceEither $ get cp "" k
 
-getToken :: ConfigParser -> String
-getToken    = forceGet "token"
+cpToken :: ConfigParser -> String
+cpToken = forceGet "token"
 
 putItems :: (a -> IO ()) -> [a] -> IO ()
 putItems putFunction i = mapM_ (\s -> putStrLn "" >> putFunction s) i
