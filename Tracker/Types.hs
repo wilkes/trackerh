@@ -81,4 +81,12 @@ emptyNote = Note { ntID      = Nothing
                  , ntText    = ""
                  , ntAuthor  = Nothing
                  , ntNotedAt = Nothing
-                 }          
+                 }
+
+data Activity = Activity { actID          :: String
+                         , actProject     :: String
+                         , actStory       :: String
+                         , actDescription :: String
+                         , actAuthor      :: String
+                         , actWhen        :: String
+                         }

@@ -2,6 +2,7 @@ module Tracker.Context
     ( ProjectM
     , callRemote
     , projectURL
+    , activitiesURL
     , unpickleWith
     , unpickle
     , unpickleResponse
@@ -36,12 +37,21 @@ projectID = ask >>= return . cfgProjectID
 token :: ProjectM String
 token = ask >>= return . cfgToken
 
+serviceURL :: String
+serviceURL = "https://www.pivotaltracker.com/services/v2/"
+
 projectURL :: ProjectM String
 projectURL = projectID >>= return . url
-    where url = ("https://www.pivotaltracker.com/services/v2/projects/" ++)
+    where url pid = serviceURL ++ "projects/" ++ pid
 
 storiesURL :: ProjectM String
 storiesURL  = projectURL <++> "/stories"
+
+activitiesURL :: ProjectM String
+activitiesURL = projectID >>= \pid ->
+                case pid of
+                  "" -> return $ serviceURL ++ "activities"
+                  _ -> projectURL <++> "/activities"
 
 (<++>) :: ProjectM String -> String -> ProjectM String
 m <++> s = m >>= return . (++ s)

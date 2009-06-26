@@ -19,6 +19,9 @@ instance XmlPickler Token where
 instance XmlPickler Note where
     xpickle = xpNote
 
+instance XmlPickler Activity where
+    xpickle = xpActivity
+
 xpToken :: PU Token
 xpToken = xpElem "token" $
           xpWrap ( uncurry Token
@@ -111,6 +114,25 @@ xpNote = xpElem "note" $
                   (xpElVal "text")
                   (xpOption (xpElVal "author"))
                   (xpOption (xpElVal "noted_at"))
+
+xpActivities :: PU [Activity]
+xpActivities = xpListOf "activities"
+
+xpActivity :: PU Activity
+xpActivity = xpElem "activity" $
+             xpWrap ( \((a,b,c),(d,e,f)) -> Activity a b c d e f
+                    , \act -> ( (actID act, actProject act, actStory act)
+                             , (actDescription act, actAuthor act, actWhen act))
+                    ) $
+             xpPair (xpTriple (xpElVal "id")
+                               (xpElVal "project")
+                               (xpElVal "story")
+                     )
+                     (xpTriple (xpElVal "description")
+                               (xpElVal "author")
+                               (xpElVal "when")
+                     )
+                     
 
 xpElVal :: String -> PU String
 xpElVal t = xpElem t xpText0

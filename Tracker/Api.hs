@@ -4,6 +4,7 @@ module Tracker.Api
     , runProjectM
     , ProjectM
     , getToken
+    , getActivities
     , getProjects
     , getProject
     , getStories
@@ -90,6 +91,9 @@ getIterations gname = url >>= unpickleWith xpIterations
 getPagedIterations :: Int -> Int -> ProjectM [Iteration]
 getPagedIterations limit offset = url >>= unpickleWith xpIterations
     where url = projectURL <++> ("/iterations" ++ (limitAndOffset limit offset))
+
+getActivities :: ProjectM [Activity]
+getActivities = activitiesURL >>= unpickleWith xpActivities
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o

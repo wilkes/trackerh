@@ -24,6 +24,8 @@ main = do
 runCmd :: ConfigParser -> String -> [String] -> IO ()
 runCmd _  "token"     [uid, pwd]     = putStrLn =<< getToken uid pwd
 runCmd cp "projects"  _              = runP getProjects                             putProjects   (cpToken cp) ""
+runCmd cp "activities"  []           = runP getActivities                           putActivities (cpToken cp) ""
+runCmd cp "activities"  [pid]        = runP getActivities                           putActivities (cpToken cp) pid
 runCmd cp "project"   [pid]          = runP getProject                              putProject    (cpToken cp) pid
 runCmd cp "stories"   [pid]          = runP (getStories 0 0)                        putStories    (cpToken cp) pid 
 runCmd cp "stories"   [pid,l,o]      = runP (getStories (read l) (read o))          putStories    (cpToken cp) pid 
@@ -131,3 +133,15 @@ putNote = putItem [ (show . ntID     , "ID")
                   , (show . ntAuthor , "Author")
                   , (show . ntNotedAt, "Noted At")
                   ]
+
+putActivities :: [Activity] -> IO ()
+putActivities = putItems putActivity
+
+putActivity :: Activity -> IO ()
+putActivity = putItem [ (actID          , "ID") 
+                      , (actProject     , "Project") 
+                      , (actStory       , "Story") 
+                      , (actDescription , "Description") 
+                      , (actAuthor      , "Author") 
+                      , (actWhen        , "When") 
+                      ]
