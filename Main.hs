@@ -9,10 +9,7 @@ import System.Directory
 import Data.ConfigFile
 import Data.Either.Utils(forceEither)
 
-import Tracker.ApiM
-import Tracker.Types
-import Tracker.Context
-import Tracker.Filter
+import Tracker.Api
 
 main :: IO ()
 main = do 

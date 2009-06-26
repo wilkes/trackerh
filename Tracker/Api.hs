@@ -1,4 +1,24 @@
-module Tracker.ApiM where
+module Tracker.Api
+    ( module Tracker.Types
+    , module Tracker.Search
+    , runProjectM
+    , ProjectM
+    , getToken
+    , getProjects
+    , getProject
+    , getStories
+    , getStory
+    , search
+    , filterStories
+    , addStory
+    , updateStory
+    , deleteStory
+    , addComment
+    , deliverAllFinished
+    , getIterations
+    , getPagedIterations    
+    )
+    where
 
 import Network.URI
 import Network.Curl
@@ -7,7 +27,7 @@ import Text.XML.HXT.Arrow.Pickle
 import Tracker.Context
 import Tracker.Types
 import Tracker.Pickle
-import Tracker.Filter
+import Tracker.Search
 
 getToken :: String -> String -> IO String
 getToken username password = callRemote url opts >>=

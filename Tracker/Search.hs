@@ -1,8 +1,9 @@
-module Tracker.Filter
+module Tracker.Search
     ( StoryType(..)
     , StoryState(..)
     , SearchTerm(..)
-    ) where
+    )
+    where
 
 import Data.List
 
