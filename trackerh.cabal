@@ -10,17 +10,8 @@ Library
                , hxt
                , network
                , mtl
-  Exposed-Modules: Tracker.Api, Tracker.ApiM
+  Exposed-Modules: Tracker.ApiM
   GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans -fforce-recomp
-
-Executable trackerh
-  Main-Is: Main.hs
-  Build-Depends: base
-               , ConfigFile
-               , MissingH
-               , directory
-  Other-Modules: Tracker.Api
-  GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans  -fforce-recomp
 
 Executable trackerhM
   Main-Is: MainMonadic.hs
@@ -39,5 +30,4 @@ Executable trackerh-test
                , test-framework-hunit
                , HUnit
                , QuickCheck < 2.0
-  Other-Modules: Tracker.Api
   GHC-Options: -O2 -threaded 
