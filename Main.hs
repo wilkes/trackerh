@@ -43,8 +43,8 @@ runCmd cp "iterations"[pid]          = runP (getIterations "")                  
 runCmd cp "iterations"[pid,l,o]      = runP (getPagedIterations (read l) (read o))  putIterations (cpToken cp) pid 
 runCmd _  _           _              = printUsage
 
-runP :: ProjectM a -> (a -> IO ()) -> String -> String -> IO ()
-runP cmd io tk pid = runProjectM cmd tk pid >>= io
+runP :: TrackerM a -> (a -> IO ()) -> String -> String -> IO ()
+runP cmd io tk pid = runTrackerM cmd tk pid >>= io
 
 printUsage :: IO ()
 printUsage = putStrLn "Usage: trackerh command [args]\n\
