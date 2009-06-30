@@ -1,17 +1,17 @@
 module Tracker.Context
     ( TrackerM
     , runTrackerM
-    , callRemote
     , projectURL
-    , activitiesURL
-    , unpickleWith
-    , unpickle
-    , unpickleResponse
     , storiesURL
-    , tokenDELETE
-    , tokenPOST
-    , tokenPUT
+    , activitiesURL
+    , unpickle
+    , unpickleWith
+    , unpickleResponse
+    , doDelete
+    , doPost
+    , doPut
     , pushEntity
+    , callRemote
     , (<++>)
     ) 
     where
@@ -60,19 +60,19 @@ unpickle :: (XmlPickler a) => String -> TrackerM a
 unpickle = unpickleWith xpickle
 
 unpickleWith :: (XmlPickler a) => PU a -> String -> TrackerM a
-unpickleWith xp url = tokenGET url >>= unpickleResponse xp
+unpickleWith xp url = doGet url >>= unpickleResponse xp
 
-tokenGET :: String -> TrackerM String
-tokenGET url = callRemoteWith url []
+doGet :: String -> TrackerM String
+doGet url = callRemoteWith url []
 
-tokenPOST :: [String] -> String -> TrackerM String
-tokenPOST ps url = callRemoteWith url [CurlPost True, CurlPostFields ps]
+doPost :: [String] -> String -> TrackerM String
+doPost ps url = callRemoteWith url [CurlPost True, CurlPostFields ps]
 
-tokenPUT :: [String] -> String -> TrackerM String
-tokenPUT ps url = callRemoteWith url [CurlCustomRequest "PUT", CurlPostFields ps]
+doPut :: [String] -> String -> TrackerM String
+doPut ps url = callRemoteWith url [CurlCustomRequest "PUT", CurlPostFields ps]
 
-tokenDELETE :: String -> TrackerM String
-tokenDELETE url = callRemoteWith url [CurlCustomRequest "DELETE", CurlPost False]
+doDelete :: String -> TrackerM String
+doDelete url = callRemoteWith url [CurlCustomRequest "DELETE", CurlPost False]
 
 pushEntity :: (XmlPickler a) => a -> PU a -> ([String] -> String -> TrackerM String) -> String -> TrackerM a
 pushEntity ent pickler webAction url = (liftIO $ runPickle pickler ent) >>=

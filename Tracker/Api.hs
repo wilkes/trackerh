@@ -51,7 +51,7 @@ getProject = projectURL >>= unpickle
 
 -- | Mark all finished stories as delivered
 deliverAllFinished :: TrackerM Stories
-deliverAllFinished = url >>= tokenPUT [] >>= unpickleResponse xpStories
+deliverAllFinished = url >>= doPut [] >>= unpickleResponse xpStories
     where url = storiesURL <++> "/deliver_all_finished"
 
 -- | Get all the stories for a project
@@ -79,21 +79,22 @@ addStory :: String -> TrackerM Story
 addStory title = createStory $ emptyStory {stName = Just title}
 
 createStory :: Story -> TrackerM Story
-createStory st = storiesURL >>= pushEntity st xpStory tokenPOST
+createStory st = storiesURL >>= pushEntity st xpStory doPost
 
 updateStory :: Story -> TrackerM Story
-updateStory st = url >>= pushEntity st xpStory tokenPUT
+updateStory st = url >>= pushEntity st xpStory doPut
       where url = storiesURL <++> ("/" ++ stid)
             stid = case (stID st) of
                      Nothing -> ""
                      Just x  -> x
 
 deleteStory :: StoryID -> TrackerM Story
-deleteStory sid = storiesURL <++> ("/" ++ sid) >>= tokenDELETE >>= unpickleResponse xpickle
+deleteStory sid = url >>= doDelete >>= unpickleResponse xpickle
+    where url = storiesURL <++> ("/" ++ sid)
 
 -- | Append a comment to the story with the given story id.
 addComment :: StoryID -> String -> TrackerM Note
-addComment sid txt = url >>= pushEntity n xpNote tokenPOST
+addComment sid txt = url >>= pushEntity n xpNote doPost
     where url = storiesURL <++> ("/" ++ sid ++ "/notes")
           n = emptyNote {ntText = txt}
 
