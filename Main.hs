@@ -8,7 +8,7 @@ import System.Console.GetOpt
 import System.Directory
 import Data.ConfigFile
 import Data.Either.Utils(forceEither)
-
+import Control.Applicative((<$>))
 import Tracker.Api
 
 main :: IO ()
@@ -73,7 +73,7 @@ loadCP Nothing   = getUserDocumentsDirectory >>= \userDir ->
 loadCP (Just fp) = loadConfig fp
 
 loadConfig :: FilePath -> IO ConfigParser
-loadConfig fp = readfile emptyCP fp >>= return . forceEither
+loadConfig fp = forceEither <$> readfile emptyCP fp
 
 forceGet :: String -> ConfigParser -> String
 forceGet k cp = forceEither $ get cp "" k
@@ -85,7 +85,7 @@ putItems :: (a -> IO ()) -> [a] -> IO ()
 putItems putFunction i = mapM_ (\s -> putStrLn "" >> putFunction s) i
 
 putItem :: [(a -> String, String)] -> a -> IO ()
-putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ (attr i)) attrMap
+putItem attrMap i = mapM_ (\(attr, l) -> putStrLn $ l ++ ": " ++ attr i) attrMap
 
 putProjects :: [Project] -> IO ()
 putProjects = putItems putProject

@@ -138,7 +138,7 @@ xpElVal :: String -> PU String
 xpElVal t = xpElem t xpText0
 
 xpListOf :: (XmlPickler a) => String -> PU [a]
-xpListOf t = xpElem t $ xpList $ xpickle
+xpListOf t = xpElem t $ xpList xpickle
 
 runUnpickle :: (XmlPickler a) => PU a -> String -> IO [a]
 runUnpickle xp xml = runX $ readString options xml >>> xunpickleVal xp

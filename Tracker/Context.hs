@@ -19,6 +19,7 @@ module Tracker.Context
 import Tracker.Pickle
 
 import Text.XML.HXT.Arrow.Pickle
+import Control.Applicative((<$>))
 import Control.Monad.Reader
 import Network.Curl
 
@@ -32,16 +33,16 @@ runTrackerM :: TrackerM a -> String -> String -> IO a
 runTrackerM f tk pid = runReaderT f (Config tk pid)
 
 projectID :: TrackerM String
-projectID = ask >>= return . cfgProjectID
+projectID = cfgProjectID <$> ask
 
 token :: TrackerM String
-token = ask >>= return . cfgToken
+token = cfgToken <$> ask
 
 serviceURL :: String
 serviceURL = "https://www.pivotaltracker.com/services/v2/"
 
 projectURL :: TrackerM String
-projectURL = projectID >>= return . url
+projectURL = url <$> projectID
     where url pid = serviceURL ++ "projects/" ++ pid
 
 storiesURL :: TrackerM String
@@ -54,7 +55,7 @@ activitiesURL = projectID >>= \pid ->
                   _ -> projectURL <++> "/activities"
 
 (<++>) :: TrackerM String -> String -> TrackerM String
-m <++> s = m >>= return . (++ s)
+m <++> s = (++ s) <$> m
 
 unpickle :: (XmlPickler a) => String -> TrackerM a
 unpickle = unpickleWith xpickle
@@ -76,7 +77,7 @@ doDelete url = callRemoteWith url [CurlCustomRequest "DELETE", CurlPost False]
 
 pushEntity :: (XmlPickler a) => a -> PU a -> ([String] -> String -> TrackerM String) -> String -> TrackerM a
 pushEntity ent pickler webAction url = (liftIO $ runPickle pickler ent) >>=
-                                        (flip webAction url) >>=
+                                        flip webAction url >>=
                                         unpickleResponse pickler
 
 callRemoteWith :: String -> [CurlOption] -> TrackerM String
@@ -86,10 +87,10 @@ callRemoteWith url extras = do
 
 
 unpickleResponse :: (XmlPickler a) => PU a -> String -> TrackerM a
-unpickleResponse xp s = liftIO $ runUnpickle xp s >>= return . head
+unpickleResponse xp s = liftIO $ head <$> runUnpickle xp s
 
 defaultHeaders :: TrackerM [CurlOption]
-defaultHeaders = token >>= return . opts
+defaultHeaders = opts <$> token
     where opts tk = [CurlHttpHeaders
                      ["X-TrackerToken: " ++ tk
                      , "Content-type: application/xml"]]

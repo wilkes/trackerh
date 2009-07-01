@@ -22,6 +22,7 @@ module Tracker.Api
     )
     where
 
+import Control.Applicative((<$>))
 import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
@@ -35,9 +36,8 @@ type StoryID = String
 
 -- | Given a user name and password fetch the corresponding API Token
 getToken :: String -> String -> IO String
-getToken username password = callRemote url opts >>=
-                          runUnpickle xpToken >>=
-                          return . tkGuid . head
+getToken username password =
+    (tkGuid . head) <$> (callRemote url opts >>= runUnpickle xpToken)
     where url = "https://www.pivotaltracker.com/services/tokens/active"
           opts = [CurlUserPwd $ username ++ ":" ++ password]
 
@@ -57,7 +57,7 @@ deliverAllFinished = url >>= doPut [] >>= unpickleResponse xpStories
 -- | Get all the stories for a project
 getStories :: Int -> Int -> TrackerM Stories
 getStories limit offset = url >>= unpickleWith xpStories
-    where url = storiesURL <++> (limitAndOffset limit offset)
+    where url = storiesURL <++> limitAndOffset limit offset
 
 -- | Get a specific story
 getStory :: StoryID -> TrackerM Story
@@ -106,7 +106,7 @@ getIterations gname = url >>= unpickleWith xpIterations
 -- | Get stories grouped by iteration and paged with limit and offset
 getPagedIterations :: Int -> Int -> TrackerM [Iteration]
 getPagedIterations limit offset = url >>= unpickleWith xpIterations
-    where url = projectURL <++> ("/iterations" ++ (limitAndOffset limit offset))
+    where url = projectURL <++> ("/iterations" ++ limitAndOffset limit offset)
 
 -- | Get recent activity for all projects or the project in the TrackerM
 getActivities :: TrackerM [Activity]
