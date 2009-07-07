@@ -37,10 +37,10 @@ runCmd cp "delete"    [pid, sid]     = runP (deleteStory sid)                   
 runCmd cp "add"       (pid:rest)     = runP (addStory (intercalate " " rest))       putStory      (cpToken cp) pid 
 runCmd cp "comment"   (pid:sid:rest) = runP (addComment sid (intercalate " " rest)) putNote       (cpToken cp) pid
 runCmd cp "deliver"   [pid]          = runP deliverAllFinished                      putStories    (cpToken cp) pid
-runCmd cp "done"      [pid]          = runP (getIterations "done")                  putIterations (cpToken cp) pid 
-runCmd cp "current"   [pid]          = runP (getIterations "current")               putIterations (cpToken cp) pid
-runCmd cp "backlog"   [pid]          = runP (getIterations "backlog")               putIterations (cpToken cp) pid
-runCmd cp "iterations"[pid]          = runP (getIterations "")                      putIterations (cpToken cp) pid
+runCmd cp "done"      [pid]          = runP (getIteration Done)                     putIterations (cpToken cp) pid 
+runCmd cp "current"   [pid]          = runP (getIteration Current)                  putIterations (cpToken cp) pid
+runCmd cp "backlog"   [pid]          = runP (getIteration Backlog)                  putIterations (cpToken cp) pid
+runCmd cp "iterations"[pid]          = runP getIterations                           putIterations (cpToken cp) pid
 runCmd cp "iterations"[pid,l,o]      = runP (getPagedIterations (read l) (read o))  putIterations (cpToken cp) pid 
 runCmd _  _           _              = printUsage
 

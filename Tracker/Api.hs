@@ -15,6 +15,7 @@ module Tracker.Api
     , deleteStory
     , addComment
     , deliverAllFinished
+    , getIteration
     , getIterations
     , getPagedIterations
     , mapAll
@@ -101,9 +102,14 @@ addComment sid txt = url >>= pushEntity n xpNote doPost
           n = emptyNote {ntText = txt}
 
 -- | Get Stories grouped by iteration with a given name 
-getIterations :: String -> TrackerM [Iteration]
-getIterations gname = url >>= unpickleWith xpIterations
-    where url = projectURL <++> ("/iterations/" ++ gname) 
+getIteration :: NamedIteration -> TrackerM [Iteration]
+getIteration n = url >>= unpickleWith xpIterations
+    where url = projectURL <++> ("/iterations/" ++ (show n))
+
+-- | Get Stories grouped by iteration with a given name 
+getIterations :: TrackerM [Iteration]
+getIterations = url >>= unpickleWith xpIterations
+    where url = projectURL <++> "/iterations" 
 
 -- | Get stories grouped by iteration and paged with limit and offset
 getPagedIterations :: Int -> Int -> TrackerM [Iteration]

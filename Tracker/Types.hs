@@ -69,6 +69,15 @@ emptyIteration =
               , itrStories   = []
               }
 
+data NamedIteration = Done
+                    | Current
+                    | Backlog
+
+instance Show NamedIteration where
+    show Done    = "done"
+    show Current = "current"
+    show Backlog = "backlog"
+
 data Note = Note { ntID      :: Maybe String
                  , ntText    :: String
                  , ntAuthor  :: Maybe String
