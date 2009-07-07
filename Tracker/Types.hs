@@ -32,7 +32,7 @@ data Story =
           , stIteration    :: Maybe Iteration
           , stLabels       :: Maybe String
           }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Ord)
 
 emptyStory :: Story
 emptyStory = Story { stID           = Nothing
@@ -58,7 +58,7 @@ data Iteration =
               , itrEndDate   :: String
               , itrStories   :: Stories
               }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Ord)
 
 emptyIteration :: Iteration
 emptyIteration =

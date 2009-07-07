@@ -1,8 +1,6 @@
 module Tracker.Api
     ( module Tracker.Types
     , module Tracker.Search
-    , TrackerM
-    , runTrackerM
     , StoryID
     , getToken
     , getActivities
@@ -19,6 +17,9 @@ module Tracker.Api
     , deliverAllFinished
     , getIterations
     , getPagedIterations
+    , mapAll
+    , mapProjects
+    , groupOn
     )
     where
 
@@ -26,6 +27,7 @@ import Control.Applicative((<$>))
 import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
+import Data.List(sort, groupBy)
 
 import Tracker.Context
 import Tracker.Types
@@ -112,11 +114,28 @@ getPagedIterations limit offset = url >>= unpickleWith xpIterations
 getActivities :: TrackerM [Activity]
 getActivities = activitiesURL >>= unpickleWith xpActivities
 
+-- | Collect the results of an API call across all the projects
+-- associated with the given token
+mapAll :: String -> TrackerM a -> IO [(Project, a)]
+mapAll tk f = do
+  projects <- runTrackerM getProjects tk ""
+  items <- mapProjects tk (map prjID projects) f
+  return $ zip projects items
+
+-- | Collect the results of an API call across the list of given
+-- project ids.
+mapProjects :: String -> [String] -> TrackerM a -> IO [a]
+mapProjects tk pids f = mapM (runTrackerM f tk) pids
+
+groupOn :: (Eq a, Ord a, Ord b) => (b -> a) -> [b] -> [(a, [b])]
+groupOn f l = sort $ foldr (\xs result -> (f $ head xs, xs):result) [] groups
+    where groups = groupBy (\x1 x2 -> (f x1) == (f x2)) l
+
+
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o
     | l <= 0    = ""
     | otherwise = "?limit=" ++ show l ++ offset
     where offset | o <= 0 = ""
                  | otherwise = "&offset=" ++ show o
-
 

@@ -10,6 +10,7 @@ import Data.ConfigFile
 import Data.Either.Utils(forceEither)
 import Control.Applicative((<$>))
 import Tracker.Api
+import Tracker.Context
 
 main :: IO ()
 main = do 

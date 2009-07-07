@@ -1,6 +1,8 @@
 module Tracker.Context
     ( TrackerM
     , runTrackerM
+    , token
+    , projectID
     , projectURL
     , storiesURL
     , activitiesURL
@@ -19,7 +21,7 @@ module Tracker.Context
 import Tracker.Pickle
 
 import Text.XML.HXT.Arrow.Pickle
-import Control.Applicative((<$>))
+import Control.Applicative((<$>), Applicative(..))
 import Control.Monad.Reader
 import Network.Curl
 
@@ -28,6 +30,10 @@ data Config = Config { cfgToken :: String
                      }
 
 type TrackerM = ReaderT Config IO
+
+instance Monad m => Applicative (ReaderT s m) where 
+    pure = return
+    (<*>) = ap 
 
 runTrackerM :: TrackerM a -> String -> String -> IO a
 runTrackerM f tk pid = runReaderT f (Config tk pid)
