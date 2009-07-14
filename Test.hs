@@ -66,10 +66,10 @@ storyXml = "<story>\
       \</story>"
 
 storyRecord = emptyStory { stID           = Just "804610"
-                         , stType         = Just "feature"
+                         , stType         = Just Feature
                          , stURL          = Just "http://www.pivotaltracker.com/story/show/804610"
                          , stEstimate     = Just "2"
-                         , stCurrentState = Just "unstarted"
+                         , stCurrentState = Just Unstarted
                          , stDescription  = Just ""
                          , stName         = Just "Add support for ssl or not"
                          , stRequestedBy  = Just "Wilkes Joiner"

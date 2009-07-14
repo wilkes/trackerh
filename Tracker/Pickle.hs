@@ -3,6 +3,7 @@ module Tracker.Pickle where
 import Text.XML.HXT.Arrow
 --import Text.XML.HXT.Arrow.Pickle
 import Tracker.Types
+import Data.Char(toLower,toUpper)
 
 instance XmlPickler Project where
     xpickle = xpProject
@@ -72,10 +73,10 @@ xpStory = xpElem "story" $
                           )
                  ) $
           xpTriple (xp5Tuple (xpOption $ xpElVal "id")
-                             (xpOption (xpElVal "story_type"))
+                             (xpOption xpStoryType)
                              (xpOption (xpElVal "url"))
                              (xpOption (xpElVal "estimate"))
-                             (xpOption (xpElVal "current_state"))
+                             (xpOption xpStoryState)
                    )
                    (xp5Tuple (xpOption $ xpElVal "description")
                              (xpOption $ xpElVal "name")
@@ -89,6 +90,18 @@ xpStory = xpElem "story" $
                    )
           
 
+xpStoryState :: PU StoryState
+xpStoryState = xpEnumerated "current_state"
+
+xpStoryType :: PU StoryType
+xpStoryType = xpEnumerated "story_type"
+
+xpEnumerated :: (Read a, Show a) => String -> PU a
+xpEnumerated tag = xpElem tag $
+                   xpWrap (read . tcase, (map toLower) . show)
+                   $ xpText0
+    where tcase "" = ""
+          tcase (h:rest) = (toUpper h):rest
 
 xpIterations :: PU Iterations
 xpIterations = xpListOf "iterations"

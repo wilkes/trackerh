@@ -1,9 +1,11 @@
 module Tracker.Types where
 
+import Data.List
+
 data Token = Token { tkGuid :: String
                    , tkID   :: String
                    }
-           deriving (Eq, Show)
+           deriving (Eq, Show, Ord)
 
 type Projects = [Project]
 data Project =
@@ -13,16 +15,15 @@ data Project =
             , prjWeekStartDay    :: String
             , prjPointScale      :: String
             }
-    deriving (Eq, Show)
-
+    deriving (Eq, Show, Ord)
 
 type Stories = [Story]
 data Story = 
     Story { stID           :: Maybe String
-          , stType         :: Maybe String
+          , stType         :: Maybe StoryType
           , stURL          :: Maybe String
           , stEstimate     :: Maybe String
-          , stCurrentState :: Maybe String
+          , stCurrentState :: Maybe StoryState
           , stDescription  :: Maybe String
           , stName         :: Maybe String
           , stRequestedBy  :: Maybe String
@@ -49,6 +50,21 @@ emptyStory = Story { stID           = Nothing
                    , stIteration    = Nothing
                    , stLabels       = Nothing
                    }
+
+data StoryState = Unstarted
+                | Started
+                | Finished
+                | Delivered
+                | Accepted
+                | Rejected
+                  deriving (Eq, Ord, Show, Read)
+
+data StoryType = Feature 
+               | Bug     
+               | Chore   
+               | Release 
+                 deriving (Eq, Ord, Show, Read)
+
 
 type Iterations = [Iteration]
 data Iteration =
@@ -99,3 +115,28 @@ data Activity = Activity { actID          :: String
                          , actAuthor      :: String
                          , actWhen        :: String
                          }
+
+data SearchTerm = Label     String
+                | Type      StoryType
+                | State     StoryState
+                | Requestor String
+                | Owner     String
+                | MyWork    String
+                | StoryID   String
+                | Query [SearchTerm]
+                  deriving (Eq)
+
+instance Show SearchTerm where
+    show (Label     v) = "label:"     ++ quote v
+    show (Type      v) = "type:"      ++ show  v 
+    show (State     v) = "state:"     ++ show  v 
+    show (Requestor v) = "requestor:" ++ quote v 
+    show (Owner     v) = "owner:"     ++ quote v 
+    show (MyWork    v) = "mywork:"    ++ quote v 
+    show (StoryID   v) = "id:"        ++ quote v 
+    show (Query     v) = intercalate " " $ map show v
+
+quote :: String -> String
+quote s
+    | any (== ' ') s = "\"" ++ s ++ "\""
+    | otherwise      = s

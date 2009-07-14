@@ -10,7 +10,7 @@ Library
                , hxt
                , network
                , mtl
-  Exposed-Modules: Tracker.Api, Tracker.Context, Tracker.Pickle, Tracker.Search, Tracker.Types
+  Exposed-Modules: Tracker.Api, Tracker.Context, Tracker.Pickle, Tracker.Types
   GHC-Options: -O2 -Wall -threaded -Werror -fno-warn-orphans -fforce-recomp
 
 Executable trackerh

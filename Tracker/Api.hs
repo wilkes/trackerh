@@ -1,6 +1,5 @@
 module Tracker.Api
     ( module Tracker.Types
-    , module Tracker.Search
     , StoryID
     , getToken
     , getActivities
@@ -33,7 +32,6 @@ import Data.List(sort, groupBy)
 import Tracker.Context
 import Tracker.Types
 import Tracker.Pickle
-import Tracker.Search
 
 type StoryID = String
 
