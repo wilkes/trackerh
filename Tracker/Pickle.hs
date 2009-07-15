@@ -41,11 +41,11 @@ xpProject = xpElem "project" $
                    , \p -> ( prjID p, prjName p, prjIterationLength p
                            , prjWeekStartDay p, prjPointScale p)
                    ) $
-            xp5Tuple (xpElVal "id")
-                     (xpElVal "name")
-                     (xpElVal "iteration_length")
-                     (xpElVal "week_start_day")
-                     (xpElVal "point_scale")
+            xp5Tuple (xpElVal  "id")
+                     (xpElVal  "name")
+                     (xpElPrim "iteration_length")
+                     (xpElVal  "week_start_day")
+                     (xpElPrim "point_scale")
 
 xpStories :: PU Stories
 xpStories = xpListOf "stories" 
@@ -74,17 +74,17 @@ xpStory = xpElem "story" $
                  ) $
           xpTriple (xp5Tuple (xpOption $ xpElVal "id")
                              (xpOption xpStoryType)
-                             (xpOption (xpElVal "url"))
-                             (xpOption (xpElVal "estimate"))
+                             (xpOption $ xpElVal  "url")
+                             (xpOption $ xpElPrim "estimate")
                              (xpOption xpStoryState)
                    )
-                   (xp5Tuple (xpOption $ xpElVal "description")
-                             (xpOption $ xpElVal "name")
-                             (xpOption $ xpElVal "requested_by")
-                             (xpOption $ xpElVal "owned_by")
-                             (xpOption $ xpElVal "created_at")
+                   (xp5Tuple (xpOption $ xpElVal  "description")
+                             (xpOption $ xpElVal  "name")
+                             (xpOption $ xpElVal  "requested_by")
+                             (xpOption $ xpElVal  "owned_by")
+                             (xpOption $ xpElPrim "created_at")
                    )
-                   (xpTriple (xpOption $ xpElVal "accepted_at")
+                   (xpTriple (xpOption $ xpElPrim "accepted_at")
                              (xpOption   xpIteration)
                              (xpOption $ xpElVal "labels")
                    )
@@ -113,9 +113,9 @@ xpIteration = xpElem "iteration" $
                                , itrStartDate itr, itrEndDate itr, itrStories itr)
                      ) $ 
               xp5Tuple (xpOption (xpElVal "id"))
-                       (xpElVal "number")
-                       (xpElVal "start")
-                       (xpElVal "finish")
+                       (xpElPrim "number")
+                       (xpOption $ xpElPrim "start")
+                       (xpOption $ xpElPrim "finish")
                        xpStories
 
 xpNote :: PU Note
@@ -126,7 +126,7 @@ xpNote = xpElem "note" $
          xp4Tuple (xpOption (xpElVal "id"))
                   (xpElVal "text")
                   (xpOption (xpElVal "author"))
-                  (xpOption (xpElVal "noted_at"))
+                  (xpOption (xpElPrim "noted_at"))
 
 xpActivities :: PU [Activity]
 xpActivities = xpListOf "activities"
@@ -149,6 +149,10 @@ xpActivity = xpElem "activity" $
 
 xpElVal :: String -> PU String
 xpElVal t = xpElem t xpText0
+
+xpElPrim :: (Read a, Show a) => String -> PU a
+xpElPrim t = xpElem t xpPrim
+
 
 xpListOf :: (XmlPickler a) => String -> PU [a]
 xpListOf t = xpElem t $ xpList xpickle

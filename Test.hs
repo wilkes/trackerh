@@ -68,12 +68,12 @@ storyXml = "<story>\
 storyRecord = emptyStory { stID           = Just "804610"
                          , stType         = Just Feature
                          , stURL          = Just "http://www.pivotaltracker.com/story/show/804610"
-                         , stEstimate     = Just "2"
+                         , stEstimate     = Just 2
                          , stCurrentState = Just Unstarted
                          , stDescription  = Just ""
                          , stName         = Just "Add support for ssl or not"
                          , stRequestedBy  = Just "Wilkes Joiner"
-                         , stCreatedAt    = Just "2009/06/14 14:08:45 GMT"
+                         , stCreatedAt    = Just (read "2009/06/14 14:08:45 GMT")
                          , stLabels       = Nothing
                          , stIteration    = Nothing
                          }
@@ -96,9 +96,9 @@ projectsXml n = "<projects type=\"array\">" ++ projects ++ "</projects>"
 
 projectRecord = Project { prjID              = "18898"
                         , prjName            = "TrackerH"
-                        , prjIterationLength = "1"
+                        , prjIterationLength = 1
                         , prjWeekStartDay    = "Sunday"
-                        , prjPointScale      = "0,1,2,3,5,8"
+                        , prjPointScale      = read "0,1,2,3,5,8"
                         }
  
 iterationsXml n m = "<iterations type=\"array\">" ++ iterations ++ "</iterations>"
@@ -112,9 +112,9 @@ iterationsXml n m = "<iterations type=\"array\">" ++ iterations ++ "</iterations
                      "</iteration>"
 
 iterationRecord m = emptyIteration { itrID            = Just "1"
-                                   , itrNumber        = "1"
-                                   , itrStartDate     = "2009/06/14 00:00:00 UTC"
-                                   , itrEndDate       = "2009/06/21 00:00:00 UTC"
+                                   , itrNumber        = 1
+                                   , itrStartDate     = Just $ read "2009/06/14 00:00:00 UTC"
+                                   , itrEndDate       = Just $ read "2009/06/21 00:00:00 UTC"
                                    , itrStories       = replicate m storyRecord
                                    }
 
@@ -129,5 +129,5 @@ noteXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 noteRecord = Note { ntID = Just "1"
                   , ntText = "new note via API"
                   , ntAuthor = Just "Spock (young)"
-                  , ntNotedAt = Just "2009/01/16 18:53:51 UTC"
+                  , ntNotedAt = Just $ read "2009/01/16 18:53:51 UTC"
                   }

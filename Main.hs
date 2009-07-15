@@ -92,21 +92,21 @@ putProjects :: [Project] -> IO ()
 putProjects = putItems putProject
 
 putProject :: Project -> IO ()
-putProject = putItem [ (prjName, "Name")
-                     , (prjID, "ID")
-                     , (prjIterationLength, "Iteration Length")
-                     , (prjWeekStartDay, "Start Day")
-                     , (prjPointScale, "Point Scale")
+putProject = putItem [ (prjName                   , "Name")
+                     , (prjID                     , "ID")
+                     , (show . prjIterationLength , "Iteration Length")
+                     , (prjWeekStartDay           , "Start Day")
+                     , (show . prjPointScale      , "Point Scale")
                      ]
 
 putIterations :: [Iteration] -> IO ()
 putIterations = mapM_ putIteration
 
 putIteration :: Iteration -> IO ()
-putIteration itr = putItem [ (show . itrID, "ID")
-                           , (itrNumber, "Number") 
-                           , (itrStartDate, "Start")
-                           , (itrEndDate, "End") 
+putIteration itr = putItem [ (show . itrID        , "ID")
+                           , (show . itrNumber    , "Number") 
+                           , (show . itrStartDate , "Start")
+                           , (show . itrEndDate   , "End") 
                            ]  itr >>
                putStories (itrStories itr)
 
