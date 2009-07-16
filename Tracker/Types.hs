@@ -172,7 +172,10 @@ instance Read TrackerTime where
     readsPrec _ = readParen False $ readsTime defaultTimeLocale datetimeFormat
 
 instance Show TrackerTime where
-    show (TrackerTime zt) = formatTime defaultTimeLocale datetimeFormat zt
+    show = formatTrackerTime datetimeFormat
 
 datetimeFormat :: String
 datetimeFormat = "%Y/%m/%d %X %Z"
+
+formatTrackerTime :: String -> TrackerTime -> String
+formatTrackerTime fmt (TrackerTime zt) = formatTime defaultTimeLocale fmt zt
