@@ -27,6 +27,7 @@ import Control.Applicative((<$>))
 import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
+import Data.Char(toLower)
 import Data.List(sort, groupBy)
 
 import Tracker.Context
@@ -102,7 +103,7 @@ addComment sid txt = url >>= pushEntity n xpNote doPost
 -- | Get Stories grouped by iteration with a given name 
 getIteration :: NamedIteration -> TrackerM [Iteration]
 getIteration n = url >>= unpickleWith xpIterations
-    where url = projectURL <++> ("/iterations/" ++ (show n))
+    where url = projectURL <++> ("/iterations/" ++ (map toLower $ show n))
 
 -- | Get Stories grouped by iteration with a given name 
 getIterations :: TrackerM [Iteration]

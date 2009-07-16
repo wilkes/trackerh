@@ -70,10 +70,7 @@ data StoryState = Unstarted
                 | Rejected
                   deriving (Eq, Ord, Show, Read)
 
-data StoryType = Feature 
-               | Bug     
-               | Chore   
-               | Release 
+data StoryType = Feature | Bug | Chore | Release 
                  deriving (Eq, Ord, Show, Read)
 
 
@@ -87,14 +84,8 @@ data Iteration =
               }
     deriving (Eq, Show, Ord)
 
-data NamedIteration = Done
-                    | Current
-                    | Backlog
-
-instance Show NamedIteration where
-    show Done    = "done"
-    show Current = "current"
-    show Backlog = "backlog"
+data NamedIteration = Backlog | Current | Done
+                      deriving (Eq, Ord, Show)
 
 data Note = Note { ntID      :: Maybe String
                  , ntText    :: String
@@ -147,12 +138,13 @@ quote s
 data TrackerTime = TrackerTime ZonedTime
 
 instance Eq TrackerTime where
-    (TrackerTime t1) == (TrackerTime t2) = t1' == t2'
-        where t1' = zonedTimeToUTC t1
-              t2' = zonedTimeToUTC t2
+    (TrackerTime t1) == (TrackerTime t2) = applyUTC (==) t1 t2
 
 instance Ord TrackerTime where
-    compare (TrackerTime t1) (TrackerTime t2) = compare t1' t2'
+    compare (TrackerTime t1) (TrackerTime t2) = applyUTC compare t1 t2
+
+applyUTC :: (UTCTime -> UTCTime -> b) -> ZonedTime -> ZonedTime -> b
+applyUTC f t1 t2 = f t1' t2' 
         where t1' = zonedTimeToUTC t1
               t2' = zonedTimeToUTC t2
 
