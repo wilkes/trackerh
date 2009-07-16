@@ -111,12 +111,12 @@ iterationsXml n m = "<iterations type=\"array\">" ++ iterations ++ "</iterations
                      storiesXml m ++
                      "</iteration>"
 
-iterationRecord m = emptyIteration { itrID            = Just "1"
-                                   , itrNumber        = 1
-                                   , itrStartDate     = Just $ read "2009/06/14 00:00:00 UTC"
-                                   , itrEndDate       = Just $ read "2009/06/21 00:00:00 UTC"
-                                   , itrStories       = replicate m storyRecord
-                                   }
+iterationRecord m = Iteration { itrID            = Just "1"
+                              , itrNumber        = 1
+                              , itrStartDate     = Just $ read "2009/06/14 00:00:00 UTC"
+                              , itrEndDate       = Just $ read "2009/06/21 00:00:00 UTC"
+                              , itrStories       = replicate m storyRecord
+                              }
 
 noteXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
     \<note>\

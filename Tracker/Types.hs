@@ -87,15 +87,6 @@ data Iteration =
               }
     deriving (Eq, Show, Ord)
 
-emptyIteration :: Iteration
-emptyIteration =
-    Iteration { itrID        = Nothing
-              , itrNumber    = 0
-              , itrStartDate = Nothing
-              , itrEndDate   = Nothing
-              , itrStories   = []
-              }
-
 data NamedIteration = Done
                     | Current
                     | Backlog
