@@ -19,7 +19,6 @@ module Tracker.Api
     , getPagedIterations
     , mapAll
     , mapProjects
-    , groupOn
     )
     where
 
@@ -28,7 +27,6 @@ import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
 import Data.Char(toLower)
-import Data.List(sort, groupBy)
 
 import Tracker.Context
 import Tracker.Types
@@ -102,8 +100,15 @@ addComment sid txt = url >>= pushEntity n xpNote doPost
 
 -- | Get Stories grouped by iteration with a given name 
 getIteration :: NamedIteration -> TrackerM [Iteration]
-getIteration n = url >>= unpickleWith xpIterations
+getIteration n = case n of
+                   Icebox -> getIcebox
+                   _      -> url >>= unpickleWith xpIterations
     where url = projectURL <++> ("/iterations/" ++ (map toLower $ show n))
+
+getIcebox :: TrackerM Iterations
+getIcebox = do
+  stories <- filterStories (State Unscheduled)
+  return $ [emptyIteration {itrStories = stories}]
 
 -- | Get Stories grouped by iteration with a given name 
 getIterations :: TrackerM [Iteration]
@@ -131,11 +136,6 @@ mapAll tk f = do
 -- project ids.
 mapProjects :: String -> [String] -> TrackerM a -> IO [a]
 mapProjects tk pids f = mapM (runTrackerM f tk) pids
-
-groupOn :: (Eq a, Ord a, Ord b) => (b -> a) -> [b] -> [(a, [b])]
-groupOn f l = sort $ foldr (\xs result -> (f $ head xs, xs):result) [] groups
-    where groups = groupBy (\x1 x2 -> (f x1) == (f x2)) l
-
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o

@@ -40,6 +40,7 @@ runCmd cp "deliver"   [pid]          = runP deliverAllFinished                  
 runCmd cp "done"      [pid]          = runP (getIteration Done)                     putIterations (cpToken cp) pid 
 runCmd cp "current"   [pid]          = runP (getIteration Current)                  putIterations (cpToken cp) pid
 runCmd cp "backlog"   [pid]          = runP (getIteration Backlog)                  putIterations (cpToken cp) pid
+runCmd cp "icebox"   [pid]           = runP (getIteration Icebox)                   putIterations (cpToken cp) pid
 runCmd cp "iterations"[pid]          = runP getIterations                           putIterations (cpToken cp) pid
 runCmd cp "iterations"[pid,l,o]      = runP (getPagedIterations (read l) (read o))  putIterations (cpToken cp) pid 
 runCmd _  _           _              = printUsage
