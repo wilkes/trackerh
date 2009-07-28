@@ -23,6 +23,7 @@ module Tracker.Api
     where
 
 import Control.Applicative((<$>))
+import Control.Concurrent
 import Network.URI
 import Network.Curl
 import Text.XML.HXT.Arrow.Pickle
@@ -129,13 +130,21 @@ getActivities = activitiesURL >>= unpickleWith xpActivities
 mapAll :: String -> TrackerM a -> IO [(Project, a)]
 mapAll tk f = do
   projects <- runTrackerM getProjects tk ""
-  items <- mapProjects tk (map prjID projects) f
-  return $ zip projects items
+  rs <- forkIOSequence $ map ((runTrackerM f tk) . prjID) projects
+  return $ zip projects rs
 
 -- | Collect the results of an API call across the list of given
 -- project ids.
 mapProjects :: String -> [String] -> TrackerM a -> IO [a]
 mapProjects tk pids f = mapM (runTrackerM f tk) pids
+
+{- http://www.haskell.org/pipermail/haskell-cafe/2009-March/057425.html -}  
+forkIOSequence :: [IO a] -> IO [a]
+forkIOSequence xs = do
+    chan <- newChan
+    let eval io = forkIO (io >>= writeChan chan)
+    forkIO $ mapM_ eval xs
+    getChanContents chan
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o
