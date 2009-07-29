@@ -91,7 +91,6 @@ callRemoteWith url extras = do
   h <- defaultHeaders
   liftIO $ callRemote url $ h ++ extras
 
-
 unpickleResponse :: (XmlPickler a) => PU a -> String -> TrackerM a
 unpickleResponse xp s = liftIO $ head <$> runUnpickle xp s
 
@@ -103,7 +102,7 @@ defaultHeaders = opts <$> token
 
 callRemote :: String -> [CurlOption] -> IO String
 callRemote url opts = 
-    getResponse >>= \response ->
+    getResponse >>= \response -> do
         case (respCurlCode response) of
           CurlOK -> return $ respBody response
           _      -> fail $ msg response 

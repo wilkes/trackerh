@@ -24,10 +24,11 @@ module Tracker.Api
 
 import Control.Applicative((<$>))
 import Control.Concurrent
-import Network.URI
-import Network.Curl
-import Text.XML.HXT.Arrow.Pickle
+import Control.Monad(replicateM,zipWithM_)
 import Data.Char(toLower)
+import Network.URI(escapeURIString,isUnescapedInURI)
+import Network.Curl(CurlOption(..))
+import Text.XML.HXT.Arrow.Pickle(xpickle)
 
 import Tracker.Context
 import Tracker.Types
@@ -130,21 +131,20 @@ getActivities = activitiesURL >>= unpickleWith xpActivities
 mapAll :: String -> TrackerM a -> IO [(Project, a)]
 mapAll tk f = do
   projects <- runTrackerM getProjects tk ""
-  rs <- forkIOSequence $ map ((runTrackerM f tk) . prjID) projects
+  rs <- mapProjects tk f (map prjID projects)
   return $ zip projects rs
 
 -- | Collect the results of an API call across the list of given
 -- project ids.
-mapProjects :: String -> [String] -> TrackerM a -> IO [a]
-mapProjects tk pids f = mapM (runTrackerM f tk) pids
+mapProjects :: String -> TrackerM a -> [String] -> IO [a]
+mapProjects tk f pids = orderedForkIO $ map (runTrackerM f tk) pids
 
-{- http://www.haskell.org/pipermail/haskell-cafe/2009-March/057425.html -}  
-forkIOSequence :: [IO a] -> IO [a]
-forkIOSequence xs = do
-    chan <- newChan
-    let eval io = forkIO (io >>= writeChan chan)
-    forkIO $ mapM_ eval xs
-    getChanContents chan
+orderedForkIO :: [IO a] -> IO [a]
+orderedForkIO actions = do
+  mvars <- replicateM (length actions) newEmptyMVar
+  let run mvar action = forkIO $ action >>= putMVar mvar
+  forkIO $ zipWithM_ run mvars actions
+  mapM takeMVar mvars
 
 limitAndOffset :: Int -> Int -> String
 limitAndOffset l o
